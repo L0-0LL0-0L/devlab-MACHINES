@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -68,16 +68,19 @@ function LaunchPage() {
     },
   });
 
+  const navigate = useNavigate();
   const save = useMutation({
     mutationFn: async () => {
       for (const s of stepSchemas) s.parse(f);
-      const { error } = await supabase.from("projects").insert({ ...f, owner_id: user!.id, cluster, status: "draft" });
+      const { data, error } = await supabase.from("projects").insert({ ...f, owner_id: user!.id, cluster, status: "draft" }).select("id").single();
       if (error) throw error;
+      return data.id as string;
     },
-    onSuccess: () => {
-      toast.success("Draft saved — open it from Your drafts to deploy");
+    onSuccess: (id) => {
+      toast.success("Draft saved — sign the pool creation with your wallet to go live");
       setF(EMPTY); setStep(0);
       qc.invalidateQueries({ queryKey: ["projects"] });
+      navigate({ to: "/launchpad/$id", params: { id } });
     },
     onError: (e) => toast.error(e instanceof z.ZodError ? e.issues[0]?.message : (e as Error).message),
   });
