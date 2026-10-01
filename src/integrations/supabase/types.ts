@@ -14,7 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          preferred_cluster: string
+          updated_at: string
+          wallet_address: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          preferred_cluster?: string
+          updated_at?: string
+          wallet_address?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          preferred_cluster?: string
+          updated_at?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          category: string
+          cluster: string
+          created_at: string
+          evidence: Json
+          id: string
+          owner_id: string
+          status: string
+          symbol: string
+          thesis: string
+          title: string
+          token_decimals: number | null
+          token_supply: number | null
+          treasury_address: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          cluster?: string
+          created_at?: string
+          evidence?: Json
+          id?: string
+          owner_id: string
+          status?: string
+          symbol: string
+          thesis: string
+          title: string
+          token_decimals?: number | null
+          token_supply?: number | null
+          treasury_address?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cluster?: string
+          created_at?: string
+          evidence?: Json
+          id?: string
+          owner_id?: string
+          status?: string
+          symbol?: string
+          thesis?: string
+          title?: string
+          token_decimals?: number | null
+          token_supply?: number | null
+          treasury_address?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      research_runs: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string
+          paper_query: string | null
+          question: string
+          result: string | null
+          roles: string[]
+          source_text: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id: string
+          paper_query?: string | null
+          question: string
+          result?: string | null
+          roles?: string[]
+          source_text?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string
+          paper_query?: string | null
+          question?: string
+          result?: string | null
+          roles?: string[]
+          source_text?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      watchlist: {
+        Row: {
+          address: string
+          cluster: string
+          created_at: string
+          id: string
+          label: string
+          owner_id: string
+        }
+        Insert: {
+          address: string
+          cluster?: string
+          created_at?: string
+          id?: string
+          label: string
+          owner_id: string
+        }
+        Update: {
+          address?: string
+          cluster?: string
+          created_at?: string
+          id?: string
+          label?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
