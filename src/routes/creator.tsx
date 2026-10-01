@@ -54,8 +54,8 @@ function CreatorDashboard() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <PageHeader eyebrow="creator" title="creator dashboard" description={`Unclaimed trading fees read live from each Meteora pool on ${cluster}. Claims are signed by your wallet and sent straight to it.`} />
-      {!user ? <SignInPrompt action="see your launched tokens and claim fees" /> : (
+      <PageHeader eyebrow="creator" title="creator dashboard">{`Unclaimed trading fees read live from each Meteora pool on ${cluster}. Claims are signed by your wallet and sent straight to it.`}</PageHeader>
+      {!user ? <SignInPrompt what="see your launched tokens and claim fees" /> : (
         <div className="space-y-6">
           <section className="panel flex flex-wrap items-center justify-between gap-4 p-5">
             <div>
@@ -75,9 +75,7 @@ function CreatorDashboard() {
           {projects.isLoading ? <p className="text-sm text-muted-foreground">Loading your launches…</p>
             : projects.error ? <p role="alert" className="text-sm text-destructive">{(projects.error as Error).message}</p>
             : !projects.data?.length ? (
-              <EmptyState title={`No launched tokens on ${cluster}`} body="Once you deploy a project's pool from its page, its creator fees appear here.">
-                <Button asChild><Link to="/launchpad">Go to launchpad</Link></Button>
-              </EmptyState>
+              <EmptyState title={`No launched tokens on ${cluster}`} action={<Button asChild><Link to="/launchpad">Go to launchpad</Link></Button>}>Once you deploy a project's pool from its page, its creator fees appear here.</EmptyState>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {projects.data.map((p) => p.mint_address && (
