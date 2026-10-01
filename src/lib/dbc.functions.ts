@@ -200,13 +200,13 @@ async function quoteCore(data: z.infer<typeof tradeIn>) {
   const { SwapMode } = await import("@meteora-ag/dynamic-bonding-curve-sdk");
   const conn = s.getConnection(data.cluster);
   const client = s.getClient(data.cluster);
-  const { address, pool, config } = await s.loadPool(client, data.mint);
+  const { address, vp, pool, config } = await s.loadPool(client, data.mint);
   if (Number(pool.isMigrated) === 1) throw new s.DbcError("migrated", "This curve has migrated to DAMM v2. Trade on Meteora instead.");
   const sell = data.side === "sell";
   const amountIn = s.toBaseUnits(data.amount, sell ? s.BASE_DECIMALS : s.QUOTE_DECIMALS);
   const point = await s.currentPoint(conn, config);
   const q = client.pool.swapQuote2({
-    virtualPool: pool, config, swapBaseForQuote: sell, hasReferral: false, eligibleForFirstSwapWithMinFee: false, currentPoint: point, slippageBps: data.slippageBps, swapMode: SwapMode.ExactIn, amountIn,
+    virtualPool: vp, config, swapBaseForQuote: sell, hasReferral: false, eligibleForFirstSwapWithMinFee: false, currentPoint: point, slippageBps: data.slippageBps, swapMode: SwapMode.ExactIn, amountIn,
   });
   const outDec = sell ? s.QUOTE_DECIMALS : s.BASE_DECIMALS;
   return { s, conn, client, address, sell, amountIn, q, outDec };

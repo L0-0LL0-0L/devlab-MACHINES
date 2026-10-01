@@ -118,7 +118,7 @@ function DeployPanel({ project, onDone }: { project: { id: string; token_supply:
 
   async function doPreview() {
     const r = await preview({ data: { initialMarketCapSol: Number(initial), migrationMarketCapSol: Number(grad), totalSupply: supply } });
-    if (!r.ok) return toast.error(r.message);
+    if (!r.ok) { toast.error(r.message); return; }
     setSummary(r);
   }
 
@@ -249,7 +249,7 @@ function TradePanel({ mint, symbol }: { mint: string; symbol: string }) {
   async function getQuote() {
     setQuote(null);
     const r = await quoteFn({ data: { cluster, mint, side, amount, slippageBps } });
-    if (!r.ok) return toast.error(r.message);
+    if (!r.ok) { toast.error(r.message); return; }
     setQuote(r);
   }
 

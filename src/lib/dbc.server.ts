@@ -96,7 +96,7 @@ export function buildBiocodeCurve(p: { initialMarketCapSol: number; migrationMar
     initialMarketCap: p.initialMarketCapSol,
     migrationMarketCap: p.migrationMarketCapSol,
     token: {
-      tokenType: TokenType.SPL,
+      tokenType: TokenType.SPLToken,
       tokenBaseDecimal: TokenDecimal.SIX,
       tokenQuoteDecimal: TokenDecimal.NINE,
       tokenAuthorityOption: TokenAuthorityOption.Immutable,
@@ -144,12 +144,12 @@ export function summarizeCurve(curve: Record<string, any>) {
   };
 }
 
-export async function loadPool(client: DynamicBondingCurveClient, mint: string): Promise<{ address: PublicKey; pool: VirtualPool; config: PoolConfig }> {
+export async function loadPool(client: DynamicBondingCurveClient, mint: string): Promise<{ address: PublicKey; vp: VirtualPool; pool: VirtualPool["poolState"]; config: PoolConfig }> {
   const found = await client.state.getPoolByBaseMint(mint);
   if (!found) throw new DbcError("pool_not_found", "No Meteora pool exists for this token on the selected network.");
-  const config = await client.state.getPoolConfig(found.account.config);
+  const config = await client.state.getPoolConfig(found.account.poolState.config);
   if (!config) throw new DbcError("config_not_found", "Pool configuration account is missing.");
-  return { address: found.publicKey, pool: found.account, config };
+  return { address: found.publicKey, vp: found.account, pool: found.account.poolState, config };
 }
 
 export async function currentPoint(connection: Connection, config: PoolConfig): Promise<BN> {
