@@ -23,7 +23,7 @@ export async function searchCrossref(q: string, n: number): Promise<Paper[]> {
   return j.message.items.filter((i) => i.title?.[0]).map((i) => ({
     provider: "crossref" as const,
     external_id: `doi:${i.DOI}`,
-    title: stripTags(i.title![0]),
+    title: stripTags(i.title![0]!),
     authors: fmtAuthors((i.author ?? []).map((a) => [a.given, a.family].filter(Boolean).join(" "))),
     year: i.issued?.["date-parts"]?.[0]?.[0] ?? null,
     venue: i["container-title"]?.[0] ?? null,
@@ -54,7 +54,7 @@ export async function searchArxiv(q: string, n: number): Promise<Paper[]> {
   return entries.map((e) => {
     const tag = (t: string) => stripTags(e.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`))?.[1] ?? "");
     const id = tag("id");
-    const authors = [...e.matchAll(/<name>([\s\S]*?)<\/name>/g)].map((m) => stripTags(m[1]));
+    const authors = [...e.matchAll(/<name>([\s\S]*?)<\/name>/g)].map((m) => stripTags(m[1] ?? ""));
     const absId = id.replace(/^https?:\/\/arxiv\.org\/abs\//, "");
     return {
       provider: "arxiv" as const,

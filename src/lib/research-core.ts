@@ -59,7 +59,7 @@ export type RoleOutput = z.infer<typeof roleOutputSchema>;
 /** Extract the first JSON object from model text (handles ```json fences). */
 export function extractJson(text: string): unknown {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const body = fenced ? fenced[1] : text;
+  const body = (fenced ? fenced[1] : text) ?? "";
   const start = body.indexOf("{");
   const end = body.lastIndexOf("}");
   if (start < 0 || end <= start) throw new Error("No JSON object in model output");
@@ -109,7 +109,7 @@ export function buildMarkdown(b: ExportBundle, roleName: (id: string) => string)
   for (const kind of ["finding", "hypothesis", "dissent", "limitation"]) {
     const items = b.findings.filter((f) => f.kind === kind);
     if (!items.length) continue;
-    L.push(``, `## ${kind[0].toUpperCase() + kind.slice(1)}s`, ``);
+    L.push(``, `## ${kind[0]!.toUpperCase() + kind.slice(1)}s`, ``);
     for (const f of items) {
       const cites = (f.citations as { source: string; excerpt: string; verified?: boolean }[]) ?? [];
       L.push(`- ${escapeMd(f.statement)} — _${roleName(f.role)}_${f.support_prob != null ? ` · support p=${Number(f.support_prob).toFixed(2)}` : ""}`);

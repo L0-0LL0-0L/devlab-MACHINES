@@ -19,7 +19,7 @@ export type JevAnswer =
   | { type: "choice"; choice: string; confidence: number; probabilities: Record<string, number> }
   | { type: "score"; score: number; confidence: number; probabilities: Record<string, number> };
 
-export async function jev(state: string | Record<string, unknown>, questions: Record<string, JevQuestion>) {
+export async function jev(state: string | Record<string, unknown>, questions: Record<string, JevQuestion | { type: string; instructions: string; criteria?: unknown }>) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new AiError("LOVABLE_API_KEY is not configured", "missing_config");
   const res = await fetch("https://ai.gateway.lovable.dev/v1/systemone", {

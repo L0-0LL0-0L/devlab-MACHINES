@@ -22,7 +22,7 @@ export const searchPapers = createServerFn({ method: "POST" })
     const settled = await Promise.allSettled(jobs.map((j) => j[1]));
     const errors: string[] = [];
     const papers: Paper[] = [];
-    settled.forEach((s, i) => (s.status === "fulfilled" ? papers.push(...s.value) : errors.push(`${jobs[i][0]} unavailable`)));
+    settled.forEach((s, i) => (s.status === "fulfilled" ? papers.push(...s.value) : errors.push(`${jobs[i]?.[0]} unavailable`)));
     return { papers, errors };
   });
 
@@ -118,17 +118,17 @@ export const advanceRun = createServerFn({ method: "POST" })
           for (const [k, a] of Object.entries(r.answers)) if (a.type === "noul") rel[k] = a.noul;
           relUsage = r.usage ?? relUsage;
         }
-        for (const s of srcs) if (rel[s.ref] != null) await db.from("research_sources").update({ relevance: rel[s.ref], included: rel[s.ref] >= 0.25 || s.provider === "user" }).eq("id", s.id);
+        for (const s of srcs) { const v = rel[s.ref]; if (v != null) await db.from("research_sources").update({ relevance: v, included: v >= 0.25 || s.provider === "user" }).eq("id", s.id); }
         const roleQs = Object.fromEntries(RESEARCH_ROLES.map((r) => [r.id, { type: "noul", instructions: `Would a "${r.name}" (${r.desc}) add substantial value for this question?` }]));
         const rr = await jev(`Research question: ${run.question}`, roleQs);
         const roleFit = Object.fromEntries(Object.entries(rr.answers).map(([k, a]) => [k, a.type === "noul" ? a.noul : null]));
         const steps = [
-          { seq: 0, kind: "triage", role: null, status: "done", provider: "lovable-gateway", model: tri.model, prompt_version: PROMPT_VERSION, summary: "Domain classification, source relevance and role fit (typed decisions).", output: { domain: tri.answers.domain, answerable: tri.answers.answerable, relevance: rel, role_fit: roleFit }, usage: { triage: tri.usage, relevance: relUsage, roles: rr.usage }, started_at: now(), finished_at: now() },
+          { seq: 0, kind: "triage", role: null, status: "done", provider: "lovable-gateway", model: tri.model, prompt_version: PROMPT_VERSION, summary: "Domain classification, source relevance and role fit (typed decisions).", output: { domain: tri.answers["domain"], answerable: tri.answers["answerable"], relevance: rel, role_fit: roleFit }, usage: { triage: tri.usage, relevance: relUsage, roles: rr.usage }, started_at: now(), finished_at: now() },
           ...run.roles.map((role, i) => ({ seq: i + 1, kind: "role", role, status: "pending" })),
           { seq: run.roles.length + 1, kind: "support", role: null, status: "pending" },
         ].map((s) => ({ ...s, run_id: run.id, owner_id: run.owner_id }));
         await db.from("research_steps").insert(steps);
-        await db.from("research_runs").update({ stage: "steps", domain: { ...(tri.answers.domain as object), answerable: (tri.answers.answerable as any)?.noul }, updated_at: now() }).eq("id", run.id);
+        await db.from("research_runs").update({ stage: "steps", domain: { ...(tri.answers["domain"] as object), answerable: (tri.answers["answerable"] as any)?.noul }, updated_at: now() }).eq("id", run.id);
         return { status: "running", done: false };
       }
 
