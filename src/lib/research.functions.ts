@@ -174,12 +174,12 @@ Return ONLY a JSON object: {"summary": string, "items": [{"kind": "finding"|"hyp
         const { data: fs } = await db.from("research_findings").select("id,statement,citations").eq("run_id", run.id);
         const byRef = new Map(srcs.map((s) => [s.ref, s]));
         const cited = (fs ?? []).filter((f) => (f.citations as any[]).length).slice(0, 40);
-        let usage = null, model = JEV_MODEL;
+        let usage: { input_tokens: number; output_tokens: number } | null = null, model = JEV_MODEL;
         if (cited.length) {
           const state = Object.fromEntries(cited.map((f, i) => [`c${i}`, { claim: f.statement, evidence: (f.citations as any[]).map((c) => `[${c.source}] ${c.excerpt}${byRef.get(c.source) ? "" : " (unknown source)"}`).join("\n") }]));
           const qs = Object.fromEntries(cited.map((_, i) => [`c${i}`, { type: "noul", instructions: `Does the evidence under key c${i} directly support its claim?` }]));
           const r = await jev(state, qs);
-          usage = r.usage; model = r.model;
+          usage = r.usage ?? null; model = r.model;
           for (const [i, f] of cited.entries()) {
             const a = r.answers[`c${i}`];
             if (a?.type === "noul") await db.from("research_findings").update({ support_prob: a.noul, support_confidence: Math.abs(a.noul - 0.5) * 2 }).eq("id", f.id);
@@ -202,7 +202,7 @@ export const aiHealth = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     const { claude, jev } = await import("./ai.server");
-    const out: Record<string, { ok: boolean; detail: string }> = {};
+    const out: { jev?: { ok: boolean; detail: string }; claude?: { ok: boolean; detail: string } } = {};
     try { const r = await jev("Health check: is water wet?", { ok: { type: "noul", instructions: "Is this a yes/no question?" } }); out.jev = { ok: true, detail: r.model }; }
     catch (e) { out.jev = { ok: false, detail: (e as Error).message }; }
     try { const r = await claude({ system: "Reply with the word ok.", content: [{ type: "text", text: "ping" }], maxTokens: 16 }); out.claude = { ok: true, detail: r.model }; }
