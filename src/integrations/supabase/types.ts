@@ -92,41 +92,258 @@ export type Database = {
         }
         Relationships: []
       }
+      research_findings: {
+        Row: {
+          citations: Json
+          created_at: string
+          id: string
+          kind: string
+          owner_id: string
+          role: string
+          run_id: string
+          statement: string
+          step_id: string | null
+          support_confidence: number | null
+          support_prob: number | null
+        }
+        Insert: {
+          citations?: Json
+          created_at?: string
+          id?: string
+          kind: string
+          owner_id: string
+          role: string
+          run_id: string
+          statement: string
+          step_id?: string | null
+          support_confidence?: number | null
+          support_prob?: number | null
+        }
+        Update: {
+          citations?: Json
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_id?: string
+          role?: string
+          run_id?: string
+          statement?: string
+          step_id?: string | null
+          support_confidence?: number | null
+          support_prob?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_findings_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "research_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "research_findings_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "research_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       research_runs: {
         Row: {
+          cancel_requested: boolean
+          checklist: Json | null
           created_at: string
+          depth: string
+          domain: Json | null
+          error: string | null
           id: string
           owner_id: string
           paper_query: string | null
+          prompt_version: string | null
           question: string
           result: string | null
           roles: string[]
           source_text: string | null
+          stage: string
+          stance: string
           status: string
+          updated_at: string
+          upload_path: string | null
+          usage: Json
         }
         Insert: {
+          cancel_requested?: boolean
+          checklist?: Json | null
           created_at?: string
+          depth?: string
+          domain?: Json | null
+          error?: string | null
           id?: string
           owner_id: string
           paper_query?: string | null
+          prompt_version?: string | null
           question: string
           result?: string | null
           roles?: string[]
           source_text?: string | null
+          stage?: string
+          stance?: string
           status?: string
+          updated_at?: string
+          upload_path?: string | null
+          usage?: Json
         }
         Update: {
+          cancel_requested?: boolean
+          checklist?: Json | null
           created_at?: string
+          depth?: string
+          domain?: Json | null
+          error?: string | null
           id?: string
           owner_id?: string
           paper_query?: string | null
+          prompt_version?: string | null
           question?: string
           result?: string | null
           roles?: string[]
           source_text?: string | null
+          stage?: string
+          stance?: string
           status?: string
+          updated_at?: string
+          upload_path?: string | null
+          usage?: Json
         }
         Relationships: []
+      }
+      research_sources: {
+        Row: {
+          authors: string | null
+          body: string | null
+          created_at: string
+          external_id: string | null
+          id: string
+          included: boolean
+          owner_id: string
+          provider: string
+          ref: string
+          relevance: number | null
+          run_id: string
+          text_kind: string
+          title: string
+          url: string | null
+          year: number | null
+        }
+        Insert: {
+          authors?: string | null
+          body?: string | null
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          included?: boolean
+          owner_id: string
+          provider: string
+          ref: string
+          relevance?: number | null
+          run_id: string
+          text_kind: string
+          title: string
+          url?: string | null
+          year?: number | null
+        }
+        Update: {
+          authors?: string | null
+          body?: string | null
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          included?: boolean
+          owner_id?: string
+          provider?: string
+          ref?: string
+          relevance?: number | null
+          run_id?: string
+          text_kind?: string
+          title?: string
+          url?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_sources_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "research_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      research_steps: {
+        Row: {
+          error: string | null
+          finished_at: string | null
+          id: string
+          kind: string
+          model: string | null
+          output: Json | null
+          owner_id: string
+          prompt_version: string | null
+          provider: string | null
+          role: string | null
+          run_id: string
+          seq: number
+          started_at: string | null
+          status: string
+          summary: string | null
+          usage: Json | null
+        }
+        Insert: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          kind: string
+          model?: string | null
+          output?: Json | null
+          owner_id: string
+          prompt_version?: string | null
+          provider?: string | null
+          role?: string | null
+          run_id: string
+          seq: number
+          started_at?: string | null
+          status?: string
+          summary?: string | null
+          usage?: Json | null
+        }
+        Update: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          kind?: string
+          model?: string | null
+          output?: Json | null
+          owner_id?: string
+          prompt_version?: string | null
+          provider?: string | null
+          role?: string | null
+          run_id?: string
+          seq?: number
+          started_at?: string | null
+          status?: string
+          summary?: string | null
+          usage?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "research_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       watchlist: {
         Row: {
