@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { useCluster, shortAddr } from "@/lib/cluster";
 import {
   buildClaimFeesTransaction, buildLaunchTransaction, buildMigrationTransaction, buildSwapTransaction,
-  getPoolState, getSwapQuote, previewCurve, recordChainTransaction, recordLaunch, submitSignedTransaction,
+  getPoolState, getSwapQuote, previewCurve, recordChainTransaction, recordLaunch, submitSignedTransaction, syncMigrationStatus,
 } from "@/lib/dbc.functions";
 
 export const Route = createFileRoute("/launchpad/$id")({
@@ -70,7 +70,7 @@ function TokenPage() {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_380px]">
         <div className="space-y-8">
           {wrongCluster && <p role="alert" className="panel p-4 text-sm">This project lives on <b>{p.cluster}</b>. Switch the network in the header to interact.</p>}
-          {p.mint_address && !wrongCluster && <PoolPanel mint={p.mint_address} isCreatorWallet={p.creator_wallet} />}
+          {p.mint_address && !wrongCluster && <PoolPanel mint={p.mint_address} isCreatorWallet={p.creator_wallet} dbStatus={p.status} migrationSig={p.migration_signature} migratedAt={p.migrated_at} />}
           <section className="panel p-6">
             <h2 className="eyebrow">Thesis</h2>
             <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">{p.thesis}</p>
@@ -85,7 +85,8 @@ function TokenPage() {
         </div>
         <aside className="space-y-6">
           {p.status === "draft" && (isOwner ? (wrongCluster ? null : <DeployPanel project={p} onDone={() => project.refetch()} />) : <SignInPrompt what="deploy this draft" />)}
-          {p.mint_address && !wrongCluster && <TradePanel mint={p.mint_address} symbol={p.symbol} />}
+          {p.mint_address && !wrongCluster && p.status !== "migrated" && <TradePanel mint={p.mint_address} symbol={p.symbol} />}
+          {p.status === "migrated" && <section className="panel p-5 text-sm">Bonding-curve trading closed after migration. <a className="underline" target="_blank" rel="noreferrer" href={`https://www.meteora.ag/pools?search=${p.mint_address}`}>Trade on Meteora</a></section>}
           {p.mint_address && (
             <dl className="panel space-y-2 p-5 text-xs">
               {([["Mint", p.mint_address], ["Pool", p.pool_address], ["Config", p.config_address], ["Creator", p.creator_wallet]] as const).map(([k, v]) => v && (
@@ -168,16 +169,24 @@ function DeployPanel({ project, onDone }: { project: { id: string; token_supply:
   );
 }
 
-function PoolPanel({ mint, isCreatorWallet }: { mint: string; isCreatorWallet: string | null }) {
+function PoolPanel({ mint, isCreatorWallet, dbStatus, migrationSig, migratedAt }: { mint: string; isCreatorWallet: string | null; dbStatus: string; migrationSig: string | null; migratedAt: string | null }) {
   const { cluster, wallet, connectWallet } = useCluster();
+  const qc = useQueryClient();
   const state = useServerFn(getPoolState);
   const claim = useServerFn(buildClaimFeesTransaction);
   const migrate = useServerFn(buildMigrationTransaction);
   const recordTx = useServerFn(recordChainTransaction);
+  const sync = useServerFn(syncMigrationStatus);
   const send = useSignAndSend();
   const [busy, setBusy] = useState<string | null>(null);
   const q = useQuery({ queryKey: ["pool", "cluster", cluster, mint], queryFn: () => state({ data: { cluster, mint } }), refetchInterval: 15000 });
   const d = q.data;
+  const chainMigrated = !!(d && d.ok && d.migrated);
+  useEffect(() => {
+    if (chainMigrated && dbStatus === "live") {
+      sync({ data: { cluster, mint } }).then(() => qc.invalidateQueries({ queryKey: ["project"] }));
+    }
+  }, [chainMigrated, dbStatus, cluster, mint]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!d) return <section className="panel p-6 text-sm text-muted-foreground">Reading pool from chain…</section>;
   if (!d.ok) return <section className="panel p-6 text-sm">Pool unavailable: {d.message}</section>;
 
@@ -211,10 +220,30 @@ function PoolPanel({ mint, isCreatorWallet }: { mint: string; isCreatorWallet: s
       <div className="mt-6">
         <div className="flex justify-between text-xs"><span>Curve progress</span><span className="font-mono">{(d.progressBps / 100).toFixed(2)}%</span></div>
         <div className="mt-2 h-1 bg-border"><div className="h-1 bg-foreground" style={{ width: `${d.progressBps / 100}%` }} /></div>
-        <p className="mt-2 text-xs text-muted-foreground">{d.migrated ? "Migrated to Meteora DAMM v2 — trade on Meteora." : d.curveComplete ? "Threshold reached. Migration is a separate transaction anyone can send." : "Reaching the threshold alone does not migrate."}</p>
       </div>
-      {d.curveComplete && !d.migrated && <Button className="mt-4" variant="outline" disabled={!!busy} onClick={() => run("migrate")}>{busy ?? "Migrate to DAMM v2"}</Button>}
-      {d.migrated && <a className="mt-4 inline-block text-sm underline" target="_blank" rel="noreferrer" href={`https://www.meteora.ag/pools?search=${mint}`}>Open on Meteora</a>}
+      <div className="mt-6 border-t border-border pt-4" aria-live="polite">
+        <h3 className="eyebrow">Migration status (read from chain)</h3>
+        <ol className="mt-3 grid grid-cols-3 gap-1 text-[11px]">
+          {[
+            { label: "Bonding curve", on: true },
+            { label: "Threshold reached", on: d.curveComplete || d.migrated },
+            { label: "Migrated to DAMM v2", on: d.migrated },
+          ].map((s, i) => (
+            <li key={s.label} className={`border-t-2 pt-1 ${s.on ? "border-foreground" : "border-border text-muted-foreground"}`}>{i + 1}. {s.label}</li>
+          ))}
+        </ol>
+        <p className="mt-3 text-xs text-muted-foreground">
+          {d.migrated
+            ? "Liquidity moved to a permanent Meteora DAMM v2 pool. Bonding-curve trading is closed; trade on Meteora."
+            : d.curveComplete
+              ? "The curve hit its threshold. Migration is a separate on-chain transaction anyone can send (Meteora's cranker may also send it). Until it confirms, the token is not migrated."
+              : `${d.quoteReserveSol} of ${d.migrationThresholdSol} SOL raised. Reaching the threshold alone does not migrate.`}
+        </p>
+        {migrationSig && <p className="mt-1 text-xs">Migration tx: <a className="font-mono underline" target="_blank" rel="noreferrer" href={`https://explorer.solana.com/tx/${migrationSig}${cluster === "devnet" ? "?cluster=devnet" : ""}`}>{shortAddr(migrationSig)}</a>{migratedAt && ` · ${new Date(migratedAt).toLocaleString()}`}</p>}
+        {d.curveComplete && !d.migrated && <Button className="mt-3" variant="outline" disabled={!!busy} onClick={() => run("migrate")}>{busy ?? (wallet ? "Send migration transaction" : "Connect wallet to migrate")}</Button>}
+        {d.curveComplete && !d.migrated && <p className="mt-2 text-xs text-muted-foreground">You pay the network fee. Your share of the new pool's liquidity stays permanently locked to the creator.</p>}
+        {d.migrated && <a className="mt-3 inline-block text-sm underline" target="_blank" rel="noreferrer" href={`https://www.meteora.ag/pools?search=${mint}`}>Trade on Meteora</a>}
+      </div>
       <div className="mt-6 border-t border-border pt-4">
         <h3 className="eyebrow">Creator fees (unclaimed, on-chain)</h3>
         <p className="mt-2 font-mono text-lg">{unclaimed.toFixed(9).replace(/0+$/, "").replace(/\.$/, "")} SOL</p>

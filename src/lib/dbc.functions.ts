@@ -337,3 +337,20 @@ export const getWalletSolBalance = createServerFn({ method: "POST" })
       return { ok: false as const, ...s.describe(e) };
     }
   });
+
+/** If the chain shows the pool migrated (by anyone, incl. Meteora's cranker), sync project status. Chain is the source of truth. */
+export const syncMigrationStatus = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ cluster, mint: addr }).parse(d))
+  .handler(async ({ data }) => {
+    const s = await import("./dbc.server");
+    try {
+      const { pool } = await s.loadPool(s.getClient(data.cluster), data.mint);
+      if (Number(pool.isMigrated) !== 1) return { ok: true as const, migrated: false };
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("projects").update({ status: "migrated", migrated_at: new Date().toISOString() })
+        .eq("cluster", data.cluster).eq("mint_address", data.mint).eq("status", "live");
+      return { ok: true as const, migrated: true };
+    } catch (e) {
+      return { ok: false as const, ...s.describe(e) };
+    }
+  });
