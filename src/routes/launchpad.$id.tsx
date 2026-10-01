@@ -183,10 +183,8 @@ function PoolPanel({ mint, isCreatorWallet }: { mint: string; isCreatorWallet: s
 
   async function run(kind: "claim" | "migrate") {
     try {
-      let w = wallet;
-      if (!w) { const c = await connectWallet(); if (!c.ok) throw new Error(c.message); w = (await import("@/lib/cluster")).getProvider() ? null : null; }
-      const owner = wallet ?? (window as unknown as { solana?: { publicKey?: { toString(): string } } }).solana?.publicKey?.toString();
-      if (!owner) throw new Error("Connect your wallet.");
+      if (!wallet) { const c = await connectWallet(); if (!c.ok) throw new Error(c.message); toast("Wallet connected — press again."); return; }
+      const owner = wallet;
       setBusy("Building…");
       const r = kind === "claim" ? await claim({ data: { cluster, mint, owner } }) : await migrate({ data: { cluster, mint, payer: owner } });
       if (!r.ok) throw new Error(r.message);
