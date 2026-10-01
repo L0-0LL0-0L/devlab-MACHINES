@@ -6,6 +6,7 @@ type SolanaProvider = {
   isPhantom?: boolean;
   connect: () => Promise<{ publicKey: { toString(): string } }>;
   disconnect: () => Promise<void>;
+  signMessage?: (msg: Uint8Array, encoding?: string) => Promise<{ signature: Uint8Array } | Uint8Array>;
 };
 
 type ClusterState = {
@@ -19,7 +20,7 @@ type ClusterState = {
 const Ctx = createContext<ClusterState | null>(null);
 const KEY = "biocode.cluster";
 
-function getProvider(): SolanaProvider | null {
+export function getProvider(): SolanaProvider | null {
   if (typeof window === "undefined") return null;
   const w = window as unknown as { solana?: SolanaProvider; phantom?: { solana?: SolanaProvider } };
   return w.phantom?.solana ?? w.solana ?? null;
