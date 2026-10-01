@@ -199,7 +199,7 @@ export function SignInPrompt({ what }: { what: string }) {
   return (
     <EmptyState
       title={`Sign in to ${what}`}
-      action={<Button asChild size="sm"><Link to="/auth">Sign in or create account</Link></Button>}
+      action={<Button asChild size="sm"><Link to="/auth">Sign in with wallet</Link></Button>}
     >
       Browsing is public. Saving work requires an account so only you can access it.
     </EmptyState>

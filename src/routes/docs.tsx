@@ -15,7 +15,7 @@ export const Route = createFileRoute("/docs")({
 
 const SECTIONS = [
   { id: "status", t: "Current state (v0.1)", b: [
-    "Live: accounts (email or Google), research workspace, real paper search via OpenAlex, launch draft builder with validation, watchlist, wallet connect (Phantom-compatible) and cluster switching.",
+    "Live: wallet sign-in (sign a free message with a Solana wallet), research workspace, real paper search via OpenAlex, launch draft builder with validation, watchlist, wallet connect (Phantom-compatible) and cluster switching.",
     "Not live yet: AI analysis of research runs, token creation, pools and trading. Runs are saved with status \"queued\"; drafts are saved with status \"draft\".",
   ]},
   { id: "accounts", t: "Accounts & privacy", b: [

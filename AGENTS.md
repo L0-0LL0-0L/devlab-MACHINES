@@ -17,3 +17,4 @@
 - Research runs execute one bounded step per `advanceRun` server call, driven by the open run view — keeps each request inside Worker time limits and gives real progress/cancel/retry.
 - Research AI writes (sources, steps, findings, run status) go through the admin client only after an RLS ownership read; clients cannot update runs — prevents forged results.
 - Jev calls go through the gateway `/v1/systemone`; Claude generation uses the direct Anthropic adapter in `src/lib/ai.server.ts` because the gateway lacks the required model.
+- Sign-in is Solana wallet only: server issues a one-use nonce message, verifies the ed25519 signature, then mints a session via an admin one-time login token — no email provider needed.
