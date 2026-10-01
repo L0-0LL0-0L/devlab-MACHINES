@@ -6,6 +6,7 @@ type SolanaProvider = {
   isPhantom?: boolean;
   connect: () => Promise<{ publicKey: { toString(): string } }>;
   disconnect: () => Promise<void>;
+  signTransaction?: <T>(tx: T) => Promise<T>;
   signMessage?: (msg: Uint8Array, encoding?: string) => Promise<{ signature: Uint8Array } | Uint8Array>;
 };
 

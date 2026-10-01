@@ -37,3 +37,12 @@
 ### Blocked / untested
 - Full signed-in browser run not executed: the project has no test user, and sign-up requires a confirmable email.
 - PDF document input to Claude untested (depends on the key).
+
+## Stage 3 — Meteora DBC launch / trade / claim / migrate (2026-10-01)
+- SDK: @meteora-ag/dynamic-bonding-curve-sdk 1.5.13, @solana/web3.js 1.98.x.
+- Live devnet: DBC program dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN confirmed executable.
+- SDK curve (buildCurveWithMarketCap, 30→85 SOL, 1B supply, 6/9 decimals): migration threshold 31.677992705 SOL, flat 100 bps, creator fee share 100, MET_DAMM_V2.
+- createConfigAndPool transaction built (1048 bytes) and simulated; simulation failed with AccountNotFound because the test payer was unfunded — devnet faucet airdrop returned "Internal error".
+- NOT yet tested live: signed launch broadcast, buy/sell, fee claim, DAMM v2 migration. Run `bun scripts/dbc-devnet-e2e.ts` with PAYER=<funded devnet keypair JSON> to execute the full path.
+- RLS: projects public read only for live/migrated; drafts owner-only; chain/status columns server-only (column grants); profiles.wallet_address no longer client-writable.
+- Typecheck and build pass.

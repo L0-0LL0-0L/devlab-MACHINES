@@ -22,6 +22,13 @@
       "when": 1790866802018,
       "tag": "0002_wallet_auth_challenges",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790878171519,
+      "tag": "0003_meteora_launch_hardening",
+      "breakpoints": true
     }
   ]
 }

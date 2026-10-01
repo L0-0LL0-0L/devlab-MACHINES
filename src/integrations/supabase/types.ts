@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      chain_transactions: {
+        Row: {
+          cluster: string
+          created_at: string
+          detail: Json
+          id: string
+          kind: string
+          project_id: string | null
+          signature: string
+          wallet: string
+        }
+        Insert: {
+          cluster: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind: string
+          project_id?: string | null
+          signature: string
+          wallet: string
+        }
+        Update: {
+          cluster?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind?: string
+          project_id?: string | null
+          signature?: string
+          wallet?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chain_transactions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -45,10 +86,22 @@ export type Database = {
         Row: {
           category: string
           cluster: string
+          config_address: string | null
           created_at: string
+          creator_wallet: string | null
           evidence: Json
           id: string
+          initial_market_cap_sol: number | null
+          launch_signature: string | null
+          launched_at: string | null
+          migrated_at: string | null
+          migration_market_cap_sol: number | null
+          migration_signature: string | null
+          mint_address: string | null
           owner_id: string
+          pending_config: string | null
+          pending_mint: string | null
+          pool_address: string | null
           status: string
           symbol: string
           thesis: string
@@ -61,10 +114,22 @@ export type Database = {
         Insert: {
           category: string
           cluster?: string
+          config_address?: string | null
           created_at?: string
+          creator_wallet?: string | null
           evidence?: Json
           id?: string
+          initial_market_cap_sol?: number | null
+          launch_signature?: string | null
+          launched_at?: string | null
+          migrated_at?: string | null
+          migration_market_cap_sol?: number | null
+          migration_signature?: string | null
+          mint_address?: string | null
           owner_id: string
+          pending_config?: string | null
+          pending_mint?: string | null
+          pool_address?: string | null
           status?: string
           symbol: string
           thesis: string
@@ -77,10 +142,22 @@ export type Database = {
         Update: {
           category?: string
           cluster?: string
+          config_address?: string | null
           created_at?: string
+          creator_wallet?: string | null
           evidence?: Json
           id?: string
+          initial_market_cap_sol?: number | null
+          launch_signature?: string | null
+          launched_at?: string | null
+          migrated_at?: string | null
+          migration_market_cap_sol?: number | null
+          migration_signature?: string | null
+          mint_address?: string | null
           owner_id?: string
+          pending_config?: string | null
+          pending_mint?: string | null
+          pool_address?: string | null
           status?: string
           symbol?: string
           thesis?: string

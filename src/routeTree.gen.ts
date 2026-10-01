@@ -13,10 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as DocsRouteImport } from './routes/docs'
-import { Route as LaunchpadRouteImport } from './routes/launchpad'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as ResearchRouteImport } from './routes/research'
+import { Route as LaunchpadIndexRouteImport } from './routes/launchpad.index'
+import { Route as LaunchpadIdRouteImport } from './routes/launchpad.$id'
+import { Route as ApiPublicMetadataIdRouteImport } from './routes/api/public/metadata.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -38,11 +40,6 @@ const DocsRoute = DocsRouteImport.update({
   path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LaunchpadRoute = LaunchpadRouteImport.update({
-  id: '/launchpad',
-  path: '/launchpad',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MarketsRoute = MarketsRouteImport.update({
   id: '/markets',
   path: '/markets',
@@ -58,26 +55,45 @@ const ResearchRoute = ResearchRouteImport.update({
   path: '/research',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LaunchpadIndexRoute = LaunchpadIndexRouteImport.update({
+  id: '/launchpad/',
+  path: '/launchpad/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LaunchpadIdRoute = LaunchpadIdRouteImport.update({
+  id: '/launchpad/$id',
+  path: '/launchpad/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMetadataIdRoute = ApiPublicMetadataIdRouteImport.update({
+  id: '/api/public/metadata/$id',
+  path: '/api/public/metadata/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/docs': typeof DocsRoute
-  '/launchpad': typeof LaunchpadRoute
   '/markets': typeof MarketsRoute
   '/portfolio': typeof PortfolioRoute
   '/research': typeof ResearchRoute
+  '/launchpad/$id': typeof LaunchpadIdRoute
+  '/launchpad/': typeof LaunchpadIndexRoute
+  '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/docs': typeof DocsRoute
-  '/launchpad': typeof LaunchpadRoute
   '/markets': typeof MarketsRoute
   '/portfolio': typeof PortfolioRoute
   '/research': typeof ResearchRoute
+  '/launchpad/$id': typeof LaunchpadIdRoute
+  '/launchpad': typeof LaunchpadIndexRoute
+  '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,10 +101,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/docs': typeof DocsRoute
-  '/launchpad': typeof LaunchpadRoute
   '/markets': typeof MarketsRoute
   '/portfolio': typeof PortfolioRoute
   '/research': typeof ResearchRoute
+  '/launchpad/$id': typeof LaunchpadIdRoute
+  '/launchpad/': typeof LaunchpadIndexRoute
+  '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,30 +115,36 @@ export interface FileRouteTypes {
     | '/auth'
     | '/community'
     | '/docs'
-    | '/launchpad'
     | '/markets'
     | '/portfolio'
     | '/research'
+    | '/launchpad/$id'
+    | '/launchpad/'
+    | '/api/public/metadata/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/community'
     | '/docs'
-    | '/launchpad'
     | '/markets'
     | '/portfolio'
     | '/research'
+    | '/launchpad/$id'
+    | '/launchpad'
+    | '/api/public/metadata/$id'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/community'
     | '/docs'
-    | '/launchpad'
     | '/markets'
     | '/portfolio'
     | '/research'
+    | '/launchpad/$id'
+    | '/launchpad/'
+    | '/api/public/metadata/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -128,10 +152,12 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CommunityRoute: typeof CommunityRoute
   DocsRoute: typeof DocsRoute
-  LaunchpadRoute: typeof LaunchpadRoute
   MarketsRoute: typeof MarketsRoute
   PortfolioRoute: typeof PortfolioRoute
   ResearchRoute: typeof ResearchRoute
+  LaunchpadIdRoute: typeof LaunchpadIdRoute
+  LaunchpadIndexRoute: typeof LaunchpadIndexRoute
+  ApiPublicMetadataIdRoute: typeof ApiPublicMetadataIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -164,13 +190,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/launchpad': {
-      id: '/launchpad'
-      path: '/launchpad'
-      fullPath: '/launchpad'
-      preLoaderRoute: typeof LaunchpadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/markets': {
       id: '/markets'
       path: '/markets'
@@ -192,6 +211,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/launchpad/': {
+      id: '/launchpad/'
+      path: '/launchpad'
+      fullPath: '/launchpad/'
+      preLoaderRoute: typeof LaunchpadIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/launchpad/$id': {
+      id: '/launchpad/$id'
+      path: '/launchpad/$id'
+      fullPath: '/launchpad/$id'
+      preLoaderRoute: typeof LaunchpadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/metadata/$id': {
+      id: '/api/public/metadata/$id'
+      path: '/api/public/metadata/$id'
+      fullPath: '/api/public/metadata/$id'
+      preLoaderRoute: typeof ApiPublicMetadataIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -200,10 +240,12 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CommunityRoute: CommunityRoute,
   DocsRoute: DocsRoute,
-  LaunchpadRoute: LaunchpadRoute,
   MarketsRoute: MarketsRoute,
   PortfolioRoute: PortfolioRoute,
   ResearchRoute: ResearchRoute,
+  LaunchpadIdRoute: LaunchpadIdRoute,
+  LaunchpadIndexRoute: LaunchpadIndexRoute,
+  ApiPublicMetadataIdRoute: ApiPublicMetadataIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
