@@ -321,3 +321,19 @@ export const recordChainTransaction = createServerFn({ method: "POST" })
       return { ok: false as const, ...s.describe(e) };
     }
   });
+
+export const getWalletSolBalance = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ cluster, wallet: addr }).parse(d))
+  .handler(async ({ data }) => {
+    const s = await import("./dbc.server");
+    try {
+      const { PublicKey } = await import("@solana/web3.js");
+      const BN = (await import("bn.js")).default;
+      const conn = s.getConnection(data.cluster);
+      const lamports = await conn.getBalance(new PublicKey(data.wallet), "confirmed");
+      const slot = await conn.getSlot("confirmed");
+      return { ok: true as const, sol: s.fromBaseUnits(new BN(lamports), s.QUOTE_DECIMALS), slot };
+    } catch (e) {
+      return { ok: false as const, ...s.describe(e) };
+    }
+  });
