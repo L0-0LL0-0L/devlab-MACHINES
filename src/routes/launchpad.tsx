@@ -79,7 +79,7 @@ function LaunchPage() {
       setF(EMPTY); setStep(0);
       qc.invalidateQueries({ queryKey: ["projects"] });
     },
-    onError: (e) => toast.error(e instanceof z.ZodError ? e.issues[0].message : (e as Error).message),
+    onError: (e) => toast.error(e instanceof z.ZodError ? e.issues[0]?.message : (e as Error).message),
   });
 
   const remove = useMutation({
@@ -91,8 +91,8 @@ function LaunchPage() {
   });
 
   function next() {
-    const r = stepSchemas[step].safeParse(f);
-    if (!r.success) return setErr(r.error.issues[0].message);
+    const r = stepSchemas[step]!.safeParse(f);
+    if (!r.success) return setErr(r.error.issues[0]?.message ?? "Invalid input");
     setErr(null);
     setStep(step + 1);
   }

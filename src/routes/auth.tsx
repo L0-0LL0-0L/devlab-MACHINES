@@ -38,7 +38,7 @@ function AuthPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const p = schema.safeParse({ email, password });
-    if (!p.success) return toast.error(p.error.issues[0].message);
+    if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Invalid input"); return; }
     setBusy(true);
     if (mode === "in") {
       const { error } = await supabase.auth.signInWithPassword(p.data);

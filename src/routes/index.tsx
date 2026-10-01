@@ -52,7 +52,7 @@ function Home() {
     const t = setInterval(() => setI((x) => (x + 1) % SLIDES.length), 6000);
     return () => clearInterval(t);
   }, [paused]);
-  const s = SLIDES[i];
+  const s = SLIDES[i]!;
 
   return (
     <>

@@ -67,7 +67,7 @@ function ResearchPage() {
       setQuestion(""); setSource(""); setAttached([]);
       qc.invalidateQueries({ queryKey: ["research_runs"] });
     },
-    onError: (e) => toast.error(e instanceof z.ZodError ? e.issues[0].message : (e as Error).message),
+    onError: (e) => toast.error(e instanceof z.ZodError ? e.issues[0]?.message : (e as Error).message),
   });
 
   const remove = useMutation({
