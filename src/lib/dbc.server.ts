@@ -137,8 +137,8 @@ export function summarizeCurve(curve: Record<string, any>) {
     curvePoints: (curve["curve"] as unknown[]).length,
     feeBps: FLAT_FEE_BPS,
     creatorTradingFeePercentage: Number(curve["creatorTradingFeePercentage"]),
-    creatorLockedLpPercentage: Number(curve["creatorLockedLpPercentage"]),
-    partnerLpPercentage: Number(curve["partnerLpPercentage"]),
+    creatorLockedLpPercentage: Number(curve["creatorPermanentLockedLiquidityPercentage"]),
+    partnerLpPercentage: Number(curve["partnerLiquidityPercentage"]) + Number(curve["partnerPermanentLockedLiquidityPercentage"]),
     migration: "Meteora DAMM v2 (MET_DAMM_V2), 1% pool fee",
     tokenAuthority: "immutable",
   };
