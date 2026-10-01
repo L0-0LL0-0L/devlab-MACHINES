@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -62,7 +62,7 @@ function LaunchPage() {
     queryKey: ["projects", "cluster", cluster, user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*").eq("cluster", cluster).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("projects").select("*").eq("cluster", cluster).eq("owner_id", user!.id).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -75,7 +75,7 @@ function LaunchPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Launch draft saved");
+      toast.success("Draft saved — open it from Your drafts to deploy");
       setF(EMPTY); setStep(0);
       qc.invalidateQueries({ queryKey: ["projects"] });
     },
@@ -100,7 +100,7 @@ function LaunchPage() {
   return (
     <>
       <PageHeader eyebrow={`launchpad · ${cluster}`} title="Prepare a launch">
-        Build a validated launch package. Drafts are private and scoped to the selected cluster. <StatusPill>on-chain pool creation awaits Meteora SDK integration</StatusPill>
+        Build a validated launch package. Drafts are private and scoped to the selected cluster. <StatusPill>save a draft, then open it to deploy on Meteora</StatusPill>
       </PageHeader>
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_340px]">
         <div>
@@ -178,21 +178,47 @@ function LaunchPage() {
         </div>
 
         <aside>
-          <h2 className="text-2xl">Your drafts <span className="font-mono text-sm text-muted-foreground">{cluster}</span></h2>
+          <LiveList cluster={cluster} />
+          <h2 className="mt-10 text-2xl">Your projects <span className="font-mono text-sm text-muted-foreground">{cluster}</span></h2>
           <div className="mt-4 space-y-3">
             {!user && <p className="text-sm text-muted-foreground">Sign in to see your private drafts.</p>}
             {user && drafts.data?.length === 0 && <EmptyState title="No drafts on this cluster" />}
             {drafts.data?.map((d) => (
               <article key={d.id} className="panel p-4">
                 <div className="flex items-center justify-between"><span className="font-mono text-xs">${d.symbol}</span>
-                  <button aria-label="Delete draft" onClick={() => remove.mutate(d.id)} className="text-muted-foreground hover:text-foreground"><Trash2 size={14} /></button></div>
-                <p className="mt-2">{d.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{d.category} · {d.status}</p>
+                  {d.status === "draft" && <button aria-label="Delete draft" onClick={() => remove.mutate(d.id)} className="text-muted-foreground hover:text-foreground"><Trash2 size={14} /></button>}</div>
+                <Link to="/launchpad/$id" params={{ id: d.id }} className="mt-2 block underline-offset-4 hover:underline">{d.title}</Link>
+                <p className="mt-1 text-xs text-muted-foreground">{d.category} · {d.status}{d.status === "draft" ? " · open to deploy" : ""}</p>
               </article>
             ))}
           </div>
         </aside>
       </div>
     </>
+  );
+}
+
+function LiveList({ cluster }: { cluster: string }) {
+  const live = useQuery({
+    queryKey: ["live-projects", "cluster", cluster],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("projects").select("id,title,symbol,status,launched_at").eq("cluster", cluster).in("status", ["live", "migrated"]).order("launched_at", { ascending: false }).limit(50);
+      if (error) throw error;
+      return data;
+    },
+  });
+  return (
+    <section>
+      <h2 className="text-2xl">Live launches <span className="font-mono text-sm text-muted-foreground">{cluster}</span></h2>
+      <div className="mt-4 space-y-2">
+        {live.data?.length === 0 && <EmptyState title="No verified launches on this network yet" />}
+        {live.data?.map((p) => (
+          <Link key={p.id} to="/launchpad/$id" params={{ id: p.id }} className="panel block p-4 hover:bg-panel-2">
+            <span className="font-mono text-xs">${p.symbol}</span> <span className="text-xs text-muted-foreground">· {p.status}</span>
+            <p className="mt-1">{p.title}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
