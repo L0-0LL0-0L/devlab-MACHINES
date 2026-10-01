@@ -8,3 +8,9 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Architecture rules
+- Auth state lives in `src/lib/auth.tsx` (AuthProvider); pages stay public and show inline sign-in prompts for private actions — keeps browsing open while RLS protects owner data.
+- Cluster + wallet state lives in `src/lib/cluster.tsx`; any cluster-dependent query key must include the literal "cluster" so switching clusters purges it.
+- All user tables (profiles, projects, watchlist, research_runs) are owner-only via RLS on auth.uid(); no public reads until a publish flow exists.
+- Shared chrome/primitives (header, footer, PageHeader, EmptyState, SignInPrompt) live in `src/components/site.tsx`.
