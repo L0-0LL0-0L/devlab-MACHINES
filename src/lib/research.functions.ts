@@ -58,7 +58,8 @@ export const createRun = createServerFn({ method: "POST" })
     return { id: run.id };
   });
 
-async function loadOwnedRun(supabase: Parameters<Parameters<ReturnType<typeof createServerFn>["handler"]>[0]>[0] extends never ? never : any, id: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadOwnedRun(supabase: any, id: string) {
   const { data, error } = await supabase.from("research_runs").select("*").eq("id", id).maybeSingle();
   if (error || !data) throw new Error("Run not found");
   return data as { id: string; owner_id: string; question: string; roles: string[]; depth: "quick" | "standard" | "deep"; stance: string; status: string; stage: string; cancel_requested: boolean; upload_path: string | null; usage: Record<string, number> };
@@ -93,6 +94,7 @@ export const advanceRun = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => uuid.parse(d))
   .handler(async ({ data, context }) => {
+    const { AiError, claude, jev } = await import("./ai.server");
     const run = await loadOwnedRun(context.supabase, data.id);
     if (["completed", "cancelled", "failed"].includes(run.status)) return { status: run.status, done: true };
     const db = await admin();
@@ -194,12 +196,12 @@ Return ONLY a JSON object: {"summary": string, "items": [{"kind": "finding"|"hyp
     }
   });
 
-import { AiError, claude, jev } from "./ai.server";
 
 /** Live non-financial provider health checks. */
 export const aiHealth = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
+    const { claude, jev } = await import("./ai.server");
     const out: Record<string, { ok: boolean; detail: string }> = {};
     try { const r = await jev("Health check: is water wet?", { ok: { type: "noul", instructions: "Is this a yes/no question?" } }); out.jev = { ok: true, detail: r.model }; }
     catch (e) { out.jev = { ok: false, detail: (e as Error).message }; }
