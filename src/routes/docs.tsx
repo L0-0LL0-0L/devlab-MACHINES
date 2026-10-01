@@ -30,7 +30,7 @@ const SECTIONS = [
     "Jev Latest makes the typed decisions: it classifies the domain, scores how relevant each source is (low-relevance sources are left out), rates how well each role fits, and estimates whether each cited excerpt supports its claim. Claude Sonnet 5.5 writes each role's findings, hypotheses, dissent and limitations, and must cite sources by quoting them word for word.",
     "A citation is marked verified only when its quoted excerpt is found word for word in the stored source text. Sources are labeled abstract only, metadata only, pasted text or full-text PDF. Verified does not mean the claim is true.",
     "Each run moves step by step while you have it open, and you can cancel it or retry a failed step. Download a Markdown or JSON reproducibility pack with sources, the claim ledger, the checklist, and the model and prompt version for each step.",
-    "Current status: Jev and paper search are live. Claude Sonnet 5.5 needs an Anthropic API key, because Lovable AI does not offer that model. Without the key, runs stop at the first role step with a clear message.",
+    "Current status: paper search, Jev and Claude Sonnet 5.5 (through Anthropic directly, since Lovable AI does not offer that model) all answered live test requests.",
   ]},
   { id: "launch", t: "Launchpad", b: [
     "Four validated steps: basics (title, symbol, category), thesis and evidence links, treasury address and token settings, then review.",

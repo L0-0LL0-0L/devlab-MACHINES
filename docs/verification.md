@@ -13,6 +13,8 @@
 |---|---|
 | Gateway `/v1/messages` with `anthropic/claude-sonnet-5-5` | **400 invalid model** — gateway offers only `claude-sonnet-5`, `opus-5`, `opus-5-5`, `fable-5-1`, `haiku-4-5` |
 | Anthropic adapter without key | Fails fast with `missing_config: ANTHROPIC_API_KEY is not configured` (no fallback, no sample output) |
+| Anthropic adapter with key, ping | OK — model `claude-sonnet-5-5`, 20 in / 4 out tokens |
+| Methods-critic role on 3 live Europe PMC abstracts | OK — schema valid, 4 items, 5/5 citations verified verbatim; 1340 in / 1608 out tokens |
 | Jev choice+noul+score request | OK — domain `longevity` p=1.0; biomedical noul 0.98; score 1.94/2 |
 | Jev claim-support noul | OK — 0.90 for a supporting excerpt |
 | Europe PMC search | OK — 3 results with abstracts |
@@ -33,6 +35,5 @@
 - Limits: 10 runs/24h, 1 active run, 12 papers, 50k chars text, 10 MB PDF, depth-bounded tokens.
 
 ### Blocked / untested
-- **Claude Sonnet 5.5 generation is not live**: needs `ANTHROPIC_API_KEY`. Until added, runs complete triage (Jev) and then fail at the first role step with that message; Retry resumes.
 - Full signed-in browser run not executed: the project has no test user, and sign-up requires a confirmable email.
 - PDF document input to Claude untested (depends on the key).
