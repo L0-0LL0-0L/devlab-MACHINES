@@ -12,6 +12,7 @@ export const NAV = [
   { to: "/launchpad", label: "Launchpad" },
   { to: "/markets", label: "Markets" },
   { to: "/portfolio", label: "Portfolio" },
+  { to: "/creator", label: "Creator" },
   { to: "/community", label: "Community" },
   { to: "/docs", label: "Docs" },
 ] as const;
