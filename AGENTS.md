@@ -18,3 +18,5 @@
 - Research AI writes (sources, steps, findings, run status) go through the admin client only after an RLS ownership read; clients cannot update runs — prevents forged results.
 - Jev calls go through the gateway `/v1/systemone`; Claude generation uses the direct Anthropic adapter in `src/lib/ai.server.ts` because the gateway lacks the required model.
 - Sign-in is Solana wallet only: server issues a one-use nonce message, verifies the ed25519 signature, then mints a session via an admin one-time login token — no email provider needed.
+- Meteora DBC logic lives in `src/lib/dbc.server.ts` (server-only) with thin wrappers in `src/lib/dbc.functions.ts`; projects go live only via `recordLaunch` after on-chain verification — the DB never leads the chain.
+- Each launch creates its own DBC config (feeClaimer = creator wallet) via createConfigAndPool; mint/config keypairs are generated and signed in the browser only.
