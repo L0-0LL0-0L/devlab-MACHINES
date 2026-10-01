@@ -345,6 +345,36 @@ export type Database = {
           },
         ]
       }
+      wallet_auth_challenges: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          message: string
+          nonce: string
+          used_at: string | null
+          wallet: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          message: string
+          nonce: string
+          used_at?: string | null
+          wallet: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message?: string
+          nonce?: string
+          used_at?: string | null
+          wallet?: string
+        }
+        Relationships: []
+      }
       watchlist: {
         Row: {
           address: string
