@@ -14,3 +14,6 @@
 - Cluster + wallet state lives in `src/lib/cluster.tsx`; any cluster-dependent query key must include the literal "cluster" so switching clusters purges it.
 - All user tables (profiles, projects, watchlist, research_runs) are owner-only via RLS on auth.uid(); no public reads until a publish flow exists.
 - Shared chrome/primitives (header, footer, PageHeader, EmptyState, SignInPrompt) live in `src/components/site.tsx`.
+- Research runs execute one bounded step per `advanceRun` server call, driven by the open run view — keeps each request inside Worker time limits and gives real progress/cancel/retry.
+- Research AI writes (sources, steps, findings, run status) go through the admin client only after an RLS ownership read; clients cannot update runs — prevents forged results.
+- Jev calls go through the gateway `/v1/systemone`; Claude generation uses the direct Anthropic adapter in `src/lib/ai.server.ts` because the gateway lacks the required model.
