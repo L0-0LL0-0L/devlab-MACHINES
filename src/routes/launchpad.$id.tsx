@@ -238,60 +238,116 @@ function TradePanel({ mint, symbol }: { mint: string; symbol: string }) {
   const quoteFn = useServerFn(getSwapQuote);
   const buildFn = useServerFn(buildSwapTransaction);
   const recordTx = useServerFn(recordChainTransaction);
-  const send = useSignAndSend();
+  const submit = useServerFn(submitSignedTransaction);
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
   const [slip, setSlip] = useState("1");
   const [quote, setQuote] = useState<{ amountOut: string; minimumAmountOut: string; tradingFeeSol: string; expiresAt: number } | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
+  type Phase =
+    | { k: "idle" }
+    | { k: "simulating" }
+    | { k: "review"; prep: Prep & { ok: true } }
+    | { k: "signing" }
+    | { k: "confirming"; sig?: string }
+    | { k: "done"; sig: string; url: string }
+    | { k: "error"; message: string };
+  const [phase, setPhase] = useState<Phase>({ k: "idle" });
+  const [quoting, setQuoting] = useState(false);
   const slippageBps = Math.round(Number(slip) * 100);
+  const reset = () => { setQuote(null); setPhase({ k: "idle" }); };
 
   async function getQuote() {
-    setQuote(null);
-    const r = await quoteFn({ data: { cluster, mint, side, amount, slippageBps } });
-    if (!r.ok) { toast.error(r.message); return; }
-    setQuote(r);
+    reset(); setQuoting(true);
+    try {
+      const r = await quoteFn({ data: { cluster, mint, side, amount, slippageBps } });
+      if (!r.ok) { toast.error(r.message); return; }
+      setQuote(r);
+    } finally { setQuoting(false); }
   }
 
-  async function trade() {
+  async function simulate() {
     try {
-      if (!wallet) { const c = await connectWallet(); if (!c.ok) throw new Error(c.message); toast("Wallet connected — press again to trade."); return; }
-      setBusy("Re-quoting & simulating…");
+      if (!wallet) { const c = await connectWallet(); if (!c.ok) throw new Error(c.message); return; }
+      setPhase({ k: "simulating" });
       const r = await buildFn({ data: { cluster, mint, side, amount, slippageBps, owner: wallet } });
       if (!r.ok) throw new Error(r.message);
-      setBusy("Approve in wallet…");
-      const sig = await send(r);
-      await recordTx({ data: { cluster, mint, signature: sig, kind: side } });
-      toast.success(`${side === "buy" ? "Bought" : "Sold"} — confirmed`);
+      setPhase({ k: "review", prep: r as Prep & { ok: true } });
+    } catch (e) {
+      const { signingError } = await import("@/lib/solana-client");
+      setPhase({ k: "error", message: signingError(e) });
+    }
+  }
+
+  async function signAndSend(prep: Prep) {
+    try {
+      setPhase({ k: "signing" });
+      const { signWithWallet, explorerTx } = await import("@/lib/solana-client");
+      const signed = await signWithWallet(prep.transactionBase64, []);
+      setPhase({ k: "confirming" });
+      const r = await submit({ data: { cluster, transactionBase64: signed, blockhash: prep.blockhash, lastValidBlockHeight: prep.lastValidBlockHeight } });
+      if (!r.ok) throw new Error(r.message);
+      setPhase({ k: "confirming", sig: r.signature });
+      await recordTx({ data: { cluster, mint, signature: r.signature, kind: side } });
+      setPhase({ k: "done", sig: r.signature, url: explorerTx(r.signature, cluster) });
+      toast.success(`${side === "buy" ? "Buy" : "Sell"} confirmed on-chain`);
       setQuote(null); setAmount("");
       qc.invalidateQueries({ queryKey: ["pool"] });
     } catch (e) {
       const { signingError } = await import("@/lib/solana-client");
-      toast.error(signingError(e));
-    } finally { setBusy(null); }
+      setPhase({ k: "error", message: signingError(e) });
+    }
   }
 
   const expired = quote && Date.now() > quote.expiresAt;
+  const busy = phase.k === "simulating" || phase.k === "signing" || phase.k === "confirming";
+  const steps = ["Quote", "Simulate", "Sign", "Confirm"];
+  const at = phase.k === "simulating" ? 1 : phase.k === "review" || phase.k === "signing" ? 2 : phase.k === "confirming" ? 3 : phase.k === "done" ? 4 : quote ? 1 : 0;
   return (
-    <section className="panel space-y-4 p-5">
+    <section className="panel space-y-4 p-5" aria-live="polite">
       <div className="grid grid-cols-2 gap-px bg-border">
         {(["buy", "sell"] as const).map((s) => (
-          <button key={s} onClick={() => { setSide(s); setQuote(null); }} className={`py-2 text-sm ${side === s ? "bg-foreground text-background" : "bg-panel"}`}>{s}</button>
+          <button key={s} disabled={busy} onClick={() => { setSide(s); reset(); }} className={`py-2 text-sm ${side === s ? "bg-foreground text-background" : "bg-panel"}`}>{s}</button>
         ))}
       </div>
-      <label className="block text-sm">{side === "buy" ? "Pay (SOL)" : `Sell (${symbol})`}<input className="field mt-1 font-mono" inputMode="decimal" value={amount} onChange={(e) => { setAmount(e.target.value.trim()); setQuote(null); }} placeholder="0.0" /></label>
-      <label className="block text-sm">Slippage (%)<input className="field mt-1" inputMode="decimal" value={slip} onChange={(e) => { setSlip(e.target.value); setQuote(null); }} /></label>
-      <Button variant="outline" className="w-full" disabled={!/^\d+(\.\d+)?$/.test(amount)} onClick={getQuote}>Get quote</Button>
+      <ol className="grid grid-cols-4 gap-1 text-[11px]">
+        {steps.map((s, i) => (
+          <li key={s} className={`border-t-2 pt-1 ${i < at ? "border-foreground text-foreground" : "border-border text-muted-foreground"}`}>{i + 1}. {s}</li>
+        ))}
+      </ol>
+      <label className="block text-sm">{side === "buy" ? "Pay (SOL)" : `Sell (${symbol})`}<input className="field mt-1 font-mono" inputMode="decimal" disabled={busy} value={amount} onChange={(e) => { setAmount(e.target.value.trim()); reset(); }} placeholder="0.0" /></label>
+      <label className="block text-sm">Slippage (%)<input className="field mt-1" inputMode="decimal" disabled={busy} value={slip} onChange={(e) => { setSlip(e.target.value); reset(); }} /></label>
+      <Button variant="outline" className="w-full" disabled={!/^\d+(\.\d+)?$/.test(amount) || busy || quoting} onClick={getQuote}>{quoting ? "Quoting…" : quote ? "Refresh quote" : "Get quote"}</Button>
       {quote && (
         <dl className="space-y-1 text-xs">
           <div className="flex justify-between"><dt>Expected</dt><dd className="font-mono">{quote.amountOut} {side === "buy" ? symbol : "SOL"}</dd></div>
           <div className="flex justify-between"><dt>Minimum received</dt><dd className="font-mono">{quote.minimumAmountOut}</dd></div>
           <div className="flex justify-between"><dt>Trading fee</dt><dd className="font-mono">{quote.tradingFeeSol} SOL</dd></div>
-          {expired && <p className="text-destructive">Quote expired — get a new one.</p>}
+          {expired && <p className="text-destructive">Quote expired — refresh it.</p>}
         </dl>
       )}
-      <Button className="w-full" disabled={!quote || !!expired || !!busy} onClick={trade}>{busy ?? (wallet ? `Review & sign ${side}` : "Connect wallet")}</Button>
-      <p className="text-xs text-muted-foreground">Server re-quotes from the live curve and enforces your minimum output on-chain. You sign every transaction.</p>
+
+      {phase.k === "review" && (
+        <div className="space-y-2 border border-border p-3 text-xs">
+          <p className="font-medium">Simulation passed</p>
+          <p className="text-muted-foreground">The server re-quoted the live curve and simulated this exact transaction. Your minimum output is enforced on-chain; the transaction fails rather than fill worse.</p>
+          <details><summary className="cursor-pointer">Simulation logs</summary><pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[10px]">{phase.prep.simulation.logs.slice(-8).join("\n")}</pre></details>
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={() => signAndSend(phase.prep)}>Sign {side} in wallet</Button>
+            <Button variant="outline" onClick={() => setPhase({ k: "idle" })}>Cancel</Button>
+          </div>
+        </div>
+      )}
+      {phase.k === "signing" && <p className="text-xs">Approve the transaction in your wallet…</p>}
+      {phase.k === "confirming" && <p className="text-xs">Waiting for on-chain confirmation{phase.sig ? ` (${shortAddr(phase.sig)})` : ""}…</p>}
+      {phase.k === "done" && <p className="text-xs">Confirmed. <a className="underline" href={phase.url} target="_blank" rel="noreferrer">View transaction</a></p>}
+      {phase.k === "error" && <p role="alert" className="text-xs text-destructive">{phase.message}</p>}
+
+      {phase.k !== "review" && (
+        <Button className="w-full" disabled={!quote || !!expired || busy} onClick={simulate}>
+          {phase.k === "simulating" ? "Re-quoting & simulating…" : wallet ? `Review ${side}` : "Connect wallet"}
+        </Button>
+      )}
+      <p className="text-xs text-muted-foreground">You sign every transaction. Nothing is sent until you approve it in your wallet.</p>
     </section>
   );
 }
