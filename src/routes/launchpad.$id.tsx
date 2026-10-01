@@ -1,0 +1,299 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { EmptyState, PageHeader, SignInPrompt, StatusPill } from "@/components/site";
+import { useAuth } from "@/lib/auth";
+import { useCluster, shortAddr } from "@/lib/cluster";
+import {
+  buildClaimFeesTransaction, buildLaunchTransaction, buildMigrationTransaction, buildSwapTransaction,
+  getPoolState, getSwapQuote, previewCurve, recordChainTransaction, recordLaunch, submitSignedTransaction,
+} from "@/lib/dbc.functions";
+
+export const Route = createFileRoute("/launchpad/$id")({
+  head: () => ({
+    meta: [
+      { title: "Project token — biocode" },
+      { name: "description", content: "Research project token on a Meteora bonding curve: live price, buy, sell, creator fees and migration." },
+      { property: "og:title", content: "Project token — biocode" },
+      { property: "og:description", content: "Live Meteora bonding-curve market for a biocode research project." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: TokenPage,
+});
+
+type Prep = { transactionBase64: string; blockhash: string; lastValidBlockHeight: number; simulation: { ok: boolean; error: string | null; logs: string[] } };
+
+function useSignAndSend() {
+  const { cluster } = useCluster();
+  const submit = useServerFn(submitSignedTransaction);
+  return async (prep: Prep, localSigners: import("@solana/web3.js").Keypair[] = []) => {
+    if (!prep.simulation.ok) throw new Error(`Simulation failed: ${prep.simulation.error ?? "unknown"}. ${prep.simulation.logs.slice(-2).join(" ")}`);
+    const { signWithWallet } = await import("@/lib/solana-client");
+    const signed = await signWithWallet(prep.transactionBase64, localSigners);
+    const r = await submit({ data: { cluster, transactionBase64: signed, blockhash: prep.blockhash, lastValidBlockHeight: prep.lastValidBlockHeight } });
+    if (!r.ok) throw new Error(r.message);
+    return r.signature;
+  };
+}
+
+function TokenPage() {
+  const { id } = Route.useParams();
+  const { user } = useAuth();
+  const { cluster } = useCluster();
+  const project = useQuery({
+    queryKey: ["project", id, user?.id ?? "anon"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("projects").select("*").eq("id", id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const p = project.data;
+  if (project.isLoading) return <PageHeader eyebrow="launchpad" title="Loading…" />;
+  if (!p) return (
+    <><PageHeader eyebrow="launchpad" title="Project not found" />
+      <div className="mx-auto max-w-3xl px-5 py-14"><EmptyState title="This project is private or doesn't exist" action={<Link to="/launchpad"><Button variant="outline">Back to launchpad</Button></Link>}>Drafts are only visible to their owner. {!user && "Sign in if this is your draft."}</EmptyState></div></>
+  );
+  const isOwner = user?.id === p.owner_id;
+  const wrongCluster = p.cluster !== cluster;
+  return (
+    <>
+      <PageHeader eyebrow={`$${p.symbol} · ${p.cluster} · ${p.status}`} title={p.title}>
+        {p.category} {p.status === "draft" && <StatusPill>private draft</StatusPill>}
+      </PageHeader>
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_380px]">
+        <div className="space-y-8">
+          {wrongCluster && <p role="alert" className="panel p-4 text-sm">This project lives on <b>{p.cluster}</b>. Switch the network in the header to interact.</p>}
+          {p.mint_address && !wrongCluster && <PoolPanel mint={p.mint_address} isCreatorWallet={p.creator_wallet} />}
+          <section className="panel p-6">
+            <h2 className="eyebrow">Thesis</h2>
+            <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">{p.thesis}</p>
+            <h2 className="eyebrow mt-6">Evidence</h2>
+            <ul className="mt-2 space-y-1 text-sm">
+              {(p.evidence as { label: string; url: string }[]).map((e, k) => (
+                <li key={k}><a className="underline" href={e.url} target="_blank" rel="noreferrer noopener">{e.label}</a></li>
+              ))}
+            </ul>
+            <p className="mt-6 text-xs text-muted-foreground">Curve liquidity is not spendable research budget. Fees claimed by the creator and curve reserves are shown separately.</p>
+          </section>
+        </div>
+        <aside className="space-y-6">
+          {p.status === "draft" && (isOwner ? (wrongCluster ? null : <DeployPanel project={p} onDone={() => project.refetch()} />) : <SignInPrompt what="deploy this draft" />)}
+          {p.mint_address && !wrongCluster && <TradePanel mint={p.mint_address} symbol={p.symbol} />}
+          {p.mint_address && (
+            <dl className="panel space-y-2 p-5 text-xs">
+              {([["Mint", p.mint_address], ["Pool", p.pool_address], ["Config", p.config_address], ["Creator", p.creator_wallet]] as const).map(([k, v]) => v && (
+                <div key={k} className="flex justify-between gap-2"><dt className="text-muted-foreground">{k}</dt><dd className="font-mono"><ExplorerLink a={v} cluster={p.cluster} /></dd></div>
+              ))}
+            </dl>
+          )}
+        </aside>
+      </div>
+    </>
+  );
+}
+
+function ExplorerLink({ a, cluster }: { a: string; cluster: string }) {
+  return <a className="underline" target="_blank" rel="noreferrer" href={`https://explorer.solana.com/address/${a}${cluster === "devnet" ? "?cluster=devnet" : ""}`}>{shortAddr(a)}</a>;
+}
+
+function DeployPanel({ project, onDone }: { project: { id: string; token_supply: number | null; cluster: string }; onDone: () => void }) {
+  const { cluster, wallet, connectWallet } = useCluster();
+  const preview = useServerFn(previewCurve);
+  const build = useServerFn(buildLaunchTransaction);
+  const record = useServerFn(recordLaunch);
+  const send = useSignAndSend();
+  const [initial, setInitial] = useState("30");
+  const [grad, setGrad] = useState("85");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [summary, setSummary] = useState<Record<string, unknown> | null>(null);
+  const [confirmMainnet, setConfirmMainnet] = useState(false);
+  const supply = Number(project.token_supply ?? 1_000_000_000);
+
+  async function doPreview() {
+    const r = await preview({ data: { initialMarketCapSol: Number(initial), migrationMarketCapSol: Number(grad), totalSupply: supply } });
+    if (!r.ok) return toast.error(r.message);
+    setSummary(r);
+  }
+
+  async function deploy() {
+    try {
+      if (!wallet) { const c = await connectWallet(); if (!c.ok) throw new Error(c.message); }
+      if (cluster === "mainnet-beta" && !confirmMainnet) throw new Error("Confirm you understand this uses real SOL on mainnet.");
+      const { Keypair } = await import("@/lib/solana-client");
+      const mint = Keypair.generate();
+      const config = Keypair.generate();
+      setBusy("Building and simulating…");
+      const r = await build({ data: { cluster, projectId: project.id, baseMint: mint.publicKey.toBase58(), configAddress: config.publicKey.toBase58(), initialMarketCapSol: Number(initial), migrationMarketCapSol: Number(grad), origin: window.location.origin } });
+      if (!r.ok) throw new Error(r.message);
+      setBusy("Approve in your wallet…");
+      const sig = await send(r, [mint, config]);
+      setBusy("Verifying on-chain…");
+      const v = await record({ data: { cluster, projectId: project.id, signature: sig } });
+      if (!v.ok) throw new Error(`Confirmed (${sig.slice(0, 8)}…) but verification failed: ${v.message}. Reload to retry verification.`);
+      toast.success("Token launched and verified on-chain");
+      onDone();
+    } catch (e) {
+      const { signingError } = await import("@/lib/solana-client");
+      toast.error(signingError(e));
+    } finally { setBusy(null); }
+  }
+
+  return (
+    <section className="panel space-y-4 p-5">
+      <h2 className="text-xl">Deploy token</h2>
+      <p className="text-xs text-muted-foreground">Creates a Meteora bonding-curve config and pool in one transaction, signed by your wallet. SOL-quoted, 6-decimal immutable token, flat 1% fee — all fees claimable by you, no app fee. At graduation, 100% of LP is permanently locked to you on DAMM v2.</p>
+      <label className="block text-sm">Starting market cap (SOL)<input className="field mt-1" inputMode="decimal" value={initial} onChange={(e) => setInitial(e.target.value)} /></label>
+      <label className="block text-sm">Graduation market cap (SOL)<input className="field mt-1" inputMode="decimal" value={grad} onChange={(e) => setGrad(e.target.value)} /></label>
+      <p className="text-xs text-muted-foreground">Supply {supply.toLocaleString()} · network {cluster}</p>
+      <Button variant="outline" className="w-full" onClick={doPreview}>Preview curve (SDK)</Button>
+      {summary && (
+        <dl className="space-y-1 text-xs">
+          <div className="flex justify-between"><dt>SOL needed to graduate</dt><dd className="font-mono">{String(summary["migrationQuoteThresholdSol"])}</dd></div>
+          <div className="flex justify-between"><dt>Trading fee</dt><dd>1% (100 bps)</dd></div>
+          <div className="flex justify-between"><dt>Your fee share</dt><dd>100% after protocol cut</dd></div>
+          <div className="flex justify-between"><dt>Locked LP to creator</dt><dd>{String(summary["creatorLockedLpPercentage"])}%</dd></div>
+          <div className="flex justify-between"><dt>Migration</dt><dd>DAMM v2</dd></div>
+        </dl>
+      )}
+      {cluster === "mainnet-beta" && <label className="flex gap-2 text-xs"><input type="checkbox" checked={confirmMainnet} onChange={(e) => setConfirmMainnet(e.target.checked)} />I understand this spends real SOL and is irreversible.</label>}
+      <Button className="w-full" disabled={!!busy || !summary} onClick={deploy}>{busy ?? (summary ? "Sign & deploy" : "Preview first")}</Button>
+    </section>
+  );
+}
+
+function PoolPanel({ mint, isCreatorWallet }: { mint: string; isCreatorWallet: string | null }) {
+  const { cluster, wallet, connectWallet } = useCluster();
+  const state = useServerFn(getPoolState);
+  const claim = useServerFn(buildClaimFeesTransaction);
+  const migrate = useServerFn(buildMigrationTransaction);
+  const recordTx = useServerFn(recordChainTransaction);
+  const send = useSignAndSend();
+  const [busy, setBusy] = useState<string | null>(null);
+  const q = useQuery({ queryKey: ["pool", "cluster", cluster, mint], queryFn: () => state({ data: { cluster, mint } }), refetchInterval: 15000 });
+  const d = q.data;
+  if (!d) return <section className="panel p-6 text-sm text-muted-foreground">Reading pool from chain…</section>;
+  if (!d.ok) return <section className="panel p-6 text-sm">Pool unavailable: {d.message}</section>;
+
+  async function run(kind: "claim" | "migrate") {
+    try {
+      let w = wallet;
+      if (!w) { const c = await connectWallet(); if (!c.ok) throw new Error(c.message); w = (await import("@/lib/cluster")).getProvider() ? null : null; }
+      const owner = wallet ?? (window as unknown as { solana?: { publicKey?: { toString(): string } } }).solana?.publicKey?.toString();
+      if (!owner) throw new Error("Connect your wallet.");
+      setBusy("Building…");
+      const r = kind === "claim" ? await claim({ data: { cluster, mint, owner } }) : await migrate({ data: { cluster, mint, payer: owner } });
+      if (!r.ok) throw new Error(r.message);
+      setBusy("Approve in wallet…");
+      const sig = await send(r);
+      await recordTx({ data: { cluster, mint, signature: sig, kind } });
+      toast.success(kind === "claim" ? "Fees claimed" : "Migrated to DAMM v2");
+      q.refetch();
+    } catch (e) {
+      const { signingError } = await import("@/lib/solana-client");
+      toast.error(signingError(e));
+    } finally { setBusy(null); }
+  }
+
+  const isCreator = wallet && wallet === d.creator;
+  const unclaimed = Number(d.creatorFeeSol) + Number(d.partnerFeeSol);
+  return (
+    <section className="panel p-6">
+      <div className="grid gap-6 sm:grid-cols-3">
+        <Stat k="Price (SOL / token)" v={Number(d.priceSolPerToken).toPrecision(6)} />
+        <Stat k="Curve reserve (SOL)" v={d.quoteReserveSol} />
+        <Stat k="Graduates at (SOL)" v={d.migrationThresholdSol} />
+      </div>
+      <div className="mt-6">
+        <div className="flex justify-between text-xs"><span>Curve progress</span><span className="font-mono">{(d.progressBps / 100).toFixed(2)}%</span></div>
+        <div className="mt-2 h-1 bg-border"><div className="h-1 bg-foreground" style={{ width: `${d.progressBps / 100}%` }} /></div>
+        <p className="mt-2 text-xs text-muted-foreground">{d.migrated ? "Migrated to Meteora DAMM v2 — trade on Meteora." : d.curveComplete ? "Threshold reached. Migration is a separate transaction anyone can send." : "Reaching the threshold alone does not migrate."}</p>
+      </div>
+      {d.curveComplete && !d.migrated && <Button className="mt-4" variant="outline" disabled={!!busy} onClick={() => run("migrate")}>{busy ?? "Migrate to DAMM v2"}</Button>}
+      {d.migrated && <a className="mt-4 inline-block text-sm underline" target="_blank" rel="noreferrer" href={`https://www.meteora.ag/pools?search=${mint}`}>Open on Meteora</a>}
+      <div className="mt-6 border-t border-border pt-4">
+        <h3 className="eyebrow">Creator fees (unclaimed, on-chain)</h3>
+        <p className="mt-2 font-mono text-lg">{unclaimed.toFixed(9).replace(/0+$/, "").replace(/\.$/, "")} SOL</p>
+        {isCreator ? (
+          <Button className="mt-3" disabled={!!busy || unclaimed <= 0} onClick={() => run("claim")}>{busy ?? "Claim creator fees"}</Button>
+        ) : (
+          <p className="mt-2 text-xs text-muted-foreground">{isCreatorWallet ? `Only the creator wallet ${shortAddr(isCreatorWallet)} can claim.` : ""} {!wallet && "Connect the creator wallet to claim."}</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function Stat({ k, v }: { k: string; v: string }) {
+  return <div><p className="eyebrow">{k}</p><p className="mt-1 font-mono text-lg">{v}</p></div>;
+}
+
+function TradePanel({ mint, symbol }: { mint: string; symbol: string }) {
+  const { cluster, wallet, connectWallet } = useCluster();
+  const qc = useQueryClient();
+  const quoteFn = useServerFn(getSwapQuote);
+  const buildFn = useServerFn(buildSwapTransaction);
+  const recordTx = useServerFn(recordChainTransaction);
+  const send = useSignAndSend();
+  const [side, setSide] = useState<"buy" | "sell">("buy");
+  const [amount, setAmount] = useState("");
+  const [slip, setSlip] = useState("1");
+  const [quote, setQuote] = useState<{ amountOut: string; minimumAmountOut: string; tradingFeeSol: string; expiresAt: number } | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const slippageBps = Math.round(Number(slip) * 100);
+
+  async function getQuote() {
+    setQuote(null);
+    const r = await quoteFn({ data: { cluster, mint, side, amount, slippageBps } });
+    if (!r.ok) return toast.error(r.message);
+    setQuote(r);
+  }
+
+  async function trade() {
+    try {
+      if (!wallet) { const c = await connectWallet(); if (!c.ok) throw new Error(c.message); toast("Wallet connected — press again to trade."); return; }
+      setBusy("Re-quoting & simulating…");
+      const r = await buildFn({ data: { cluster, mint, side, amount, slippageBps, owner: wallet } });
+      if (!r.ok) throw new Error(r.message);
+      setBusy("Approve in wallet…");
+      const sig = await send(r);
+      await recordTx({ data: { cluster, mint, signature: sig, kind: side } });
+      toast.success(`${side === "buy" ? "Bought" : "Sold"} — confirmed`);
+      setQuote(null); setAmount("");
+      qc.invalidateQueries({ queryKey: ["pool"] });
+    } catch (e) {
+      const { signingError } = await import("@/lib/solana-client");
+      toast.error(signingError(e));
+    } finally { setBusy(null); }
+  }
+
+  const expired = quote && Date.now() > quote.expiresAt;
+  return (
+    <section className="panel space-y-4 p-5">
+      <div className="grid grid-cols-2 gap-px bg-border">
+        {(["buy", "sell"] as const).map((s) => (
+          <button key={s} onClick={() => { setSide(s); setQuote(null); }} className={`py-2 text-sm ${side === s ? "bg-foreground text-background" : "bg-panel"}`}>{s}</button>
+        ))}
+      </div>
+      <label className="block text-sm">{side === "buy" ? "Pay (SOL)" : `Sell (${symbol})`}<input className="field mt-1 font-mono" inputMode="decimal" value={amount} onChange={(e) => { setAmount(e.target.value.trim()); setQuote(null); }} placeholder="0.0" /></label>
+      <label className="block text-sm">Slippage (%)<input className="field mt-1" inputMode="decimal" value={slip} onChange={(e) => { setSlip(e.target.value); setQuote(null); }} /></label>
+      <Button variant="outline" className="w-full" disabled={!/^\d+(\.\d+)?$/.test(amount)} onClick={getQuote}>Get quote</Button>
+      {quote && (
+        <dl className="space-y-1 text-xs">
+          <div className="flex justify-between"><dt>Expected</dt><dd className="font-mono">{quote.amountOut} {side === "buy" ? symbol : "SOL"}</dd></div>
+          <div className="flex justify-between"><dt>Minimum received</dt><dd className="font-mono">{quote.minimumAmountOut}</dd></div>
+          <div className="flex justify-between"><dt>Trading fee</dt><dd className="font-mono">{quote.tradingFeeSol} SOL</dd></div>
+          {expired && <p className="text-destructive">Quote expired — get a new one.</p>}
+        </dl>
+      )}
+      <Button className="w-full" disabled={!quote || !!expired || !!busy} onClick={trade}>{busy ?? (wallet ? `Review & sign ${side}` : "Connect wallet")}</Button>
+      <p className="text-xs text-muted-foreground">Server re-quotes from the live curve and enforces your minimum output on-chain. You sign every transaction.</p>
+    </section>
+  );
+}

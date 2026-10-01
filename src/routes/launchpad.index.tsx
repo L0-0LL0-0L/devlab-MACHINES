@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { useCluster, isBase58Address } from "@/lib/cluster";
 import { CATEGORIES } from "@/lib/research";
 
-export const Route = createFileRoute("/launchpad")({
+export const Route = createFileRoute("/launchpad/")({
   head: () => ({
     meta: [
       { title: "Launchpad — biocode" },
