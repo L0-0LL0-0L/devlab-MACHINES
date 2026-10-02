@@ -30,8 +30,8 @@ function ClusterSelect() {
         }}
         className="h-8 rounded-sm border border-input bg-background px-2 font-mono text-xs text-foreground"
       >
-        <option value="devnet">devnet</option>
         <option value="mainnet-beta">mainnet</option>
+        <option value="devnet">devnet</option>
       </select>
     </label>
   );
