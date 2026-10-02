@@ -23,7 +23,7 @@ const SECTIONS = [
     "Every saved record is owner-only: access rules on the database ensure only you can read, change or delete your rows.",
   ]},
   { id: "clusters", t: "Clusters", b: [
-    "biocode defaults to Solana devnet. Switching to mainnet disconnects your wallet and clears all cluster-dependent data in the app, then reloads drafts and watchlist for the new cluster.",
+    "biocode defaults to Solana mainnet. Switching networks disconnects your wallet and clears all cluster-dependent data in the app, then reloads drafts and watchlist for the new cluster. Use devnet for risk-free testing.",
   ]},
   { id: "research", t: "Research", b: [
     "A run combines a question, papers found live in Europe PMC, Crossref and arXiv, pasted text or a private PDF, a depth and stance, and up to 12 specialist roles: Literature mapper, Hypothesis builder, Methods critic, Statistics reviewer, Reproducibility reviewer, Data interpreter, Novelty scout, Translational researcher, Ethics reviewer, Funding planner, Peer-review challenger and Synthesis editor.",
