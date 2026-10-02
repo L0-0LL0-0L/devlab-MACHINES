@@ -29,12 +29,12 @@ export function getProvider(): SolanaProvider | null {
 
 export function ClusterProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
-  const [cluster, setClusterState] = useState<Cluster>("devnet");
+  const [cluster, setClusterState] = useState<Cluster>("mainnet-beta");
   const [wallet, setWallet] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(KEY);
-    if (saved === "mainnet-beta") setClusterState("mainnet-beta");
+    if (saved === "devnet") setClusterState("devnet");
   }, []);
 
   const disconnectWallet = useCallback(async () => {
