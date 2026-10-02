@@ -28,7 +28,7 @@ const STATS = [
   { value: "0", label: "projects launched on-chain" },
   { value: "0", label: "live markets" },
   { value: String(RESEARCH_ROLES.length), label: "specialist research roles" },
-  { value: "devnet", label: "default cluster" },
+  { value: "mainnet", label: "default cluster" },
 ];
 
 const STEPS = [
