@@ -69,6 +69,7 @@ function TokenPage() {
       </PageHeader>
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_380px]">
         <div className="space-y-8">
+          {p.image_url && <img src={p.image_url} alt={`${p.title} project mark`} className="aspect-square w-full max-w-sm border border-border object-cover" />}
           {wrongCluster && <p role="alert" className="panel p-4 text-sm">This project lives on <b>{p.cluster}</b>. Switch the network in the header to interact.</p>}
           {p.mint_address && !wrongCluster && <PoolPanel mint={p.mint_address} isCreatorWallet={p.creator_wallet} dbStatus={p.status} migrationSig={p.migration_signature} migratedAt={p.migrated_at} />}
           <section className="panel p-6">
@@ -81,6 +82,7 @@ function TokenPage() {
               ))}
             </ul>
             <p className="mt-6 text-xs text-muted-foreground">Curve liquidity is not spendable research budget. Fees claimed by the creator and curve reserves are shown separately.</p>
+            {(p.website_url || p.x_url) && <div className="mt-6 flex gap-4 text-sm">{p.website_url && <a className="underline" href={p.website_url} target="_blank" rel="noreferrer noopener">Website</a>}{p.x_url && <a className="underline" href={p.x_url} target="_blank" rel="noreferrer noopener">X</a>}</div>}
           </section>
         </div>
         <aside className="space-y-6">

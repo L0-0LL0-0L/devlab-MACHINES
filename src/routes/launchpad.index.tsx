@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -10,6 +10,8 @@ import { EmptyState, PageHeader, SignInPrompt, StatusPill } from "@/components/s
 import { useAuth } from "@/lib/auth";
 import { useCluster, isBase58Address } from "@/lib/cluster";
 import { CATEGORIES } from "@/lib/research";
+import { useServerFn } from "@tanstack/react-start";
+import { syncExternalBiocodeLaunch } from "@/lib/dbc.functions";
 
 export const Route = createFileRoute("/launchpad/")({
   head: () => ({
@@ -202,6 +204,8 @@ function LaunchPage() {
 }
 
 function LiveList({ cluster }: { cluster: string }) {
+  const client = useQueryClient();
+  const syncExternal = useServerFn(syncExternalBiocodeLaunch);
   const live = useQuery({
     queryKey: ["live-projects", "cluster", cluster],
     queryFn: async () => {
@@ -210,6 +214,12 @@ function LiveList({ cluster }: { cluster: string }) {
       return data;
     },
   });
+  useEffect(() => {
+    if (cluster !== "mainnet-beta") return;
+    void syncExternal().then((result) => {
+      if (result.ok && "projectId" in result) void client.invalidateQueries({ queryKey: ["live-projects", "cluster", cluster] });
+    });
+  }, [client, cluster, syncExternal]);
   return (
     <section>
       <h2 className="text-2xl">Live launches <span className="font-mono text-sm text-muted-foreground">{cluster}</span></h2>
