@@ -166,7 +166,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-border">
         <p className="mx-auto max-w-7xl px-5 py-5 font-mono text-xs text-muted-foreground">
-          © {new Date().getFullYear()} biocode · v0.1 foundation · devnet by default
+          © {new Date().getFullYear()} biocode · v0.1 foundation · mainnet by default
         </p>
       </div>
     </footer>

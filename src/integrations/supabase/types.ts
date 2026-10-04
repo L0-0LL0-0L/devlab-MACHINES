@@ -91,6 +91,7 @@ export type Database = {
           creator_wallet: string | null
           evidence: Json
           id: string
+          image_url: string | null
           initial_market_cap_sol: number | null
           launch_signature: string | null
           launched_at: string | null
@@ -110,6 +111,8 @@ export type Database = {
           token_supply: number | null
           treasury_address: string | null
           updated_at: string
+          website_url: string | null
+          x_url: string | null
         }
         Insert: {
           category: string
@@ -119,6 +122,7 @@ export type Database = {
           creator_wallet?: string | null
           evidence?: Json
           id?: string
+          image_url?: string | null
           initial_market_cap_sol?: number | null
           launch_signature?: string | null
           launched_at?: string | null
@@ -138,6 +142,8 @@ export type Database = {
           token_supply?: number | null
           treasury_address?: string | null
           updated_at?: string
+          website_url?: string | null
+          x_url?: string | null
         }
         Update: {
           category?: string
@@ -147,6 +153,7 @@ export type Database = {
           creator_wallet?: string | null
           evidence?: Json
           id?: string
+          image_url?: string | null
           initial_market_cap_sol?: number | null
           launch_signature?: string | null
           launched_at?: string | null
@@ -166,6 +173,8 @@ export type Database = {
           token_supply?: number | null
           treasury_address?: string | null
           updated_at?: string
+          website_url?: string | null
+          x_url?: string | null
         }
         Relationships: []
       }

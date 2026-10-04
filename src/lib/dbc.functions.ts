@@ -13,6 +13,10 @@ const curveIn = z.object({
   migrationMarketCapSol: z.number().positive().max(10_000_000),
 });
 
+const BIOCODE_EXTERNAL_MINT = "9fiMGcvfGYcDEJW7rAacYchYEGr5gitLXmuXvZGjUbio";
+const BIOCODE_EXTERNAL_OWNER = "3b4f26e0-c683-4b35-8aa5-3ba5d5aa5033";
+const BIOCODE_IMAGE_URL = "/__l5e/assets-v1/7c262e4e-ca17-4bd8-b012-a21916eb2d78/biocode-token.jpg";
+
 type Fail = { ok: false; code: string; message: string };
 
 async function ownDraft(context: { supabase: any }, projectId: string, c: string) {
@@ -192,6 +196,54 @@ export const getPoolState = createServerFn({ method: "POST" })
       return { ok: false as const, ...s.describe(e) };
     }
   });
+
+/** Publish the pre-registered biocode mint only after its mainnet DBC pool is independently verified. */
+export const syncExternalBiocodeLaunch = createServerFn({ method: "POST" }).handler(async () => {
+  const s = await import("./dbc.server");
+  try {
+    const { address, pool, config } = await s.loadPool(s.getClient("mainnet-beta"), BIOCODE_EXTERNAL_MINT);
+    if (config.quoteMint.toBase58() !== s.WSOL_MINT) throw new s.DbcError("quote_mismatch", "Pool is not quoted in SOL.");
+    const wallet = pool.creator.toBase58();
+    if (config.feeClaimer.toBase58() !== wallet) throw new s.DbcError("claimer_mismatch", "Pool fee claimer does not match its creator.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const now = new Date().toISOString();
+    const projectData = {
+      owner_id: BIOCODE_EXTERNAL_OWNER,
+      title: "biocode",
+      symbol: "BIOCODE",
+      thesis: "A decentralized-science platform for AI-assisted research and community-funded scientific work.",
+      category: "other",
+      evidence: [
+        { label: "Website", url: "https://biocode.cfd/" },
+        { label: "X", url: "https://x.com/biocodeDBC" },
+      ],
+      cluster: "mainnet-beta",
+      status: Number(pool.isMigrated) === 1 ? "migrated" : "live",
+      mint_address: BIOCODE_EXTERNAL_MINT,
+      pool_address: address.toBase58(),
+      config_address: pool.config.toBase58(),
+      creator_wallet: wallet,
+      treasury_address: wallet,
+      token_decimals: s.BASE_DECIMALS,
+      image_url: BIOCODE_IMAGE_URL,
+      website_url: "https://biocode.cfd/",
+      x_url: "https://x.com/biocodeDBC",
+      launched_at: now,
+      updated_at: now,
+    };
+    const { data: existing } = await supabaseAdmin.from("projects").select("id").eq("cluster", "mainnet-beta").eq("mint_address", BIOCODE_EXTERNAL_MINT).maybeSingle();
+    const result = existing
+      ? await supabaseAdmin.from("projects").update(projectData).eq("id", existing.id).select("id,status").single()
+      : await supabaseAdmin.from("projects").insert(projectData).select("id,status").single();
+    const { data, error } = result;
+    if (error) throw error;
+    if (!data) throw new Error("Verified launch could not be saved.");
+    return { ok: true as const, projectId: data.id, status: data.status };
+  } catch (e) {
+    if (e instanceof s.DbcError && e.code === "pool_not_found") return { ok: true as const, pending: true as const };
+    return { ok: false as const, ...s.describe(e) };
+  }
+});
 
 const tradeIn = z.object({ cluster, mint: addr, side: z.enum(["buy", "sell"]), amount: z.string().regex(/^\d+(\.\d+)?$/).max(30), slippageBps: z.number().int().min(10).max(2000) });
 
