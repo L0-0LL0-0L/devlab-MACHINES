@@ -207,7 +207,7 @@ export const syncExternalBiocodeLaunch = createServerFn({ method: "POST" }).hand
     if (config.feeClaimer.toBase58() !== wallet) throw new s.DbcError("claimer_mismatch", "Pool fee claimer does not match its creator.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const now = new Date().toISOString();
-    const { data, error } = await supabaseAdmin.from("projects").upsert({
+    const projectData = {
       owner_id: BIOCODE_EXTERNAL_OWNER,
       title: "biocode",
       symbol: "BIOCODE",
@@ -230,8 +230,14 @@ export const syncExternalBiocodeLaunch = createServerFn({ method: "POST" }).hand
       x_url: "https://x.com/biocodeDBC",
       launched_at: now,
       updated_at: now,
-    }, { onConflict: "cluster,mint_address" }).select("id,status").single();
+    };
+    const { data: existing } = await supabaseAdmin.from("projects").select("id").eq("cluster", "mainnet-beta").eq("mint_address", BIOCODE_EXTERNAL_MINT).maybeSingle();
+    const result = existing
+      ? await supabaseAdmin.from("projects").update(projectData).eq("id", existing.id).select("id,status").single()
+      : await supabaseAdmin.from("projects").insert(projectData).select("id,status").single();
+    const { data, error } = result;
     if (error) throw error;
+    if (!data) throw new Error("Verified launch could not be saved.");
     return { ok: true as const, projectId: data.id, status: data.status };
   } catch (e) {
     if (e instanceof s.DbcError && e.code === "pool_not_found") return { ok: true as const, pending: true as const };
