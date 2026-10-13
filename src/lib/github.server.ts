@@ -1,16 +1,30 @@
 import { parseRepository } from "./machine-core";
-async function github(path: string, raw = false) {
-  const response = await fetch("https://api.github.com" + path, {
+// Edge runtimes (Cloudflare Workers) reject redirect:"error"; use "manual" and refuse any 3xx.
+export async function githubFetch(
+  path: string,
+  raw = false,
+  fetcher: typeof fetch = fetch,
+  token?: string,
+) {
+  const response = await fetcher("https://api.github.com" + path, {
     headers: {
       Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json",
       "User-Agent": "devlab-machines",
-      ...(process.env["GITHUB_TOKEN"]
-        ? { Authorization: `Bearer ${process.env["GITHUB_TOKEN"]}` }
-        : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    redirect: "error",
+    redirect: "manual",
     signal: AbortSignal.timeout(15000),
   });
+  if ((response.status >= 300 && response.status < 400) || response.type === "opaqueredirect") {
+    await response.body?.cancel();
+    throw new Error(`GitHub ${response.status}: unexpected redirect refused (repository may have moved or been renamed; use its current URL)`);
+  }
+  return readGithub(response);
+}
+async function github(path: string, raw = false) {
+  return githubFetch(path, raw, fetch, process.env["GITHUB_TOKEN"] || undefined);
+}
+async function readGithub(response: Response) {
   if (!response.ok)
     throw new Error(
       `GitHub ${response.status}: ${response.status === 404 ? "Public repository or file not found" : response.status === 403 ? "Repository lookup rate limited. Retry later or configure an operator GITHUB_TOKEN for higher lookup limits." : "Repository lookup unavailable"}`,
