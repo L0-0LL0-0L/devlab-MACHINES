@@ -113,7 +113,8 @@ export const saveSettings = createServerFn({ method: "POST" })
       .eq("owner_id", context.userId)
       .single();
     if (!m) throw new Error("Not your machine");
-    if(data.recipe.calibration&&!calibrationReady(data.recipe))throw new Error("Calibration must pin all metrics and complete safe harness paths");
+    if (data.recipe.calibration && !calibrationReady(data.recipe))
+      throw new Error("Calibration must pin all metrics and complete safe harness paths");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("machines")
@@ -173,7 +174,23 @@ export const providerHealth = createServerFn({ method: "POST" })
       ),
     };
   });
-export const proposePatch=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator((v:unknown)=>z.object({id:z.string().uuid(),paths:z.array(z.string()).max(6)}).parse(v)).handler(async({data,context})=>{const {data:m}=await context.supabase.from('machines').select('id').eq('id',data.id).eq('owner_id',context.userId).single();if(!m)throw new Error('Not your machine');throw new Error('Start a calibrated author session using Run. Patch generation requires an active signed runner lease and a bounded attempt.');});
+export const proposePatch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) =>
+    z.object({ id: z.string().uuid(), paths: z.array(z.string()).max(6) }).parse(v),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: m } = await context.supabase
+      .from("machines")
+      .select("id")
+      .eq("id", data.id)
+      .eq("owner_id", context.userId)
+      .single();
+    if (!m) throw new Error("Not your machine");
+    throw new Error(
+      "Start a calibrated author session using Run. Patch generation requires an active signed runner lease and a bounded attempt.",
+    );
+  });
 export const registerRunner = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) =>

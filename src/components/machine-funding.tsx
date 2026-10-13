@@ -34,7 +34,7 @@ export function MachineFunding({
     try {
       await fn();
       await q.refetch();
-      toast.success("Saved verified funding record");
+      toast.success("Saved funding configuration or confirmed receipt");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {

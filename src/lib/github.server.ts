@@ -4,7 +4,9 @@ async function github(path: string, raw = false) {
     headers: {
       Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json",
       "User-Agent": "devlab-machines",
-      ...(process.env["GITHUB_TOKEN"]?{Authorization:`Bearer ${process.env["GITHUB_TOKEN"]}`} : {}),
+      ...(process.env["GITHUB_TOKEN"]
+        ? { Authorization: `Bearer ${process.env["GITHUB_TOKEN"]}` }
+        : {}),
     },
     redirect: "error",
     signal: AbortSignal.timeout(15000),

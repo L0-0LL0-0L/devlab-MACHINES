@@ -49,7 +49,11 @@ export function parseRepository(input: string) {
   return { owner, repo, url: `https://github.com/${owner}/${repo}` };
 }
 export function patchPaths(patch: string) {
-  if (/^diff --git .*"|^(?:old mode|new mode|deleted file mode)/m.test(patch))
+  if (
+    /^diff --git .*"|^(?:old mode|new mode|deleted file mode)|^new file mode (?!100644$)/m.test(
+      patch,
+    )
+  )
     throw new Error("Quoted paths and file mode changes are not allowed");
   const headers = [...patch.matchAll(/^diff --git a\/([^\n]+) b\/([^\n]+)$/gm)].flatMap((m) => [
     m[1] ?? "",
@@ -271,4 +275,19 @@ export function judge(input: {
   return { accepted: reasons.length === 0, reasons, verifiers: [...valid] };
 }
 
-export function calibrationReady(recipe:Recipe){const c=recipe.calibration;if(!c)return false;return Object.keys(c.harness).length>0 && Object.keys(c.metrics).includes(recipe.metric) && recipe.guards.every(g=>Object.keys(c.metrics).includes(g)) && Object.entries(c.metrics).every(([,range])=>range.max>=range.min) && Object.keys(c.harness).every(p=>/^[A-Za-z0-9_./-]+$/.test(p)&&!p.startsWith('/')&&!p.split('/').some(x=>x==='..'||x===''));}
+export function calibrationReady(recipe: Recipe) {
+  const c = recipe.calibration;
+  if (!c) return false;
+  return (
+    Object.keys(c.harness).length > 0 &&
+    Object.keys(c.metrics).includes(recipe.metric) &&
+    recipe.guards.every((g) => Object.keys(c.metrics).includes(g)) &&
+    Object.entries(c.metrics).every(([, range]) => range.max >= range.min) &&
+    Object.keys(c.harness).every(
+      (p) =>
+        /^[A-Za-z0-9_./-]+$/.test(p) &&
+        !p.startsWith("/") &&
+        !p.split("/").some((x) => x === ".." || x === ""),
+    )
+  );
+}

@@ -150,10 +150,16 @@ export async function runnerRequest(
   if (mode === "lease") {
     const { data, error } = await db.rpc("lease_machine_job", { p_runner: runner.id });
     if (error) throw error;
-    const leased=data?.[0];
-    if(!leased)return Response.json({job:null});
-    const snapshot=leased.snapshot as {recipe:unknown};const recipeBytes=canonical(snapshot.recipe);
-    return Response.json({job:{...leased,snapshot:{...snapshot,recipeBytes,recipeDigest:await digest(recipeBytes)}}});
+    const leased = data?.[0];
+    if (!leased) return Response.json({ job: null });
+    const snapshot = leased.snapshot as { recipe: unknown };
+    const recipeBytes = canonical(snapshot.recipe);
+    return Response.json({
+      job: {
+        ...leased,
+        snapshot: { ...snapshot, recipeBytes, recipeDigest: await digest(recipeBytes) },
+      },
+    });
   }
   const text = await request.text();
   if (text.length > 400000) return Response.json({ error: "Payload too large" }, { status: 413 });
@@ -296,7 +302,17 @@ export async function runnerRequest(
     body.files.reduce((n, f) => n + f.text.length, 0) > 24000
   )
     throw new Error("Unsafe or oversized selected source");
-  if(new TextEncoder().encode(canonical({files:body.files,feedback:body.feedback,soul:snap.soul,recipe})).length>11000 || body.files.some(f=>/-----BEGIN .*PRIVATE KEY-----|(?:api[_-]?key|password|secret)\s*[=:]\s*["'][^"']{12}/i.test(f.text)))throw new Error("Source contains sensitive material or exceeds token input bound");
+  if (
+    new TextEncoder().encode(
+      canonical({ files: body.files, feedback: body.feedback, soul: snap.soul, recipe }),
+    ).length > 11000 ||
+    body.files.some((f) =>
+      /-----BEGIN .*PRIVATE KEY-----|(?:api[_-]?key|password|secret)\s*[=:]\s*["'][^"']{12}/i.test(
+        f.text,
+      ),
+    )
+  )
+    throw new Error("Source contains sensitive material or exceeds token input bound");
   const { data: reservation, error } = await db.rpc("reserve_author_attempt", {
     p_id: body.attemptId,
     p_job: job.id,
@@ -309,8 +325,8 @@ export async function runnerRequest(
   if (reserved.cached)
     return Response.json(reserved, { status: reserved.status === "pending" ? 202 : 200 });
   let result;
-  let provenance:object={};
-  const prompt=canonical({files:body.files,feedback:body.feedback,soul:snap.soul,recipe});
+  let provenance: object = {};
+  const prompt = canonical({ files: body.files, feedback: body.feedback, soul: snap.soul, recipe });
   try {
     const { claude } = await import("./ai.server");
     const started = Date.now();
@@ -325,7 +341,13 @@ export async function runnerRequest(
       ],
       maxTokens: 3000,
     });
-    provenance={model:output.model,usage:output.usage,promptVersion:"devlab-autonomous-v2",sourceDigest:await digest(canonical(body.files)),ms:Date.now()-started};
+    provenance = {
+      model: output.model,
+      usage: output.usage,
+      promptVersion: "devlab-autonomous-v2",
+      sourceDigest: await digest(canonical(body.files)),
+      ms: Date.now() - started,
+    };
     if (output.model !== "claude-sonnet-5-5") throw new Error("Required model mismatch");
     const patch = output.text.replace(/^```(?:diff)?\s*\n/, "").replace(/\n```\s*$/, "");
     const paths = guardPatch(patch, protectedPaths);
@@ -341,7 +363,7 @@ export async function runnerRequest(
       sourceDigest: await digest(canonical(body.files)),
     };
   } catch (e) {
-    result = { ok: false, error: (e as Error).message,...provenance };
+    result = { ok: false, error: (e as Error).message, ...provenance };
   }
   const { error: saveError } = await db
     .from("machine_author_attempts")

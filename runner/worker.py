@@ -10,7 +10,7 @@ def sha(value):return hashlib.sha256(value.encode() if isinstance(value,str) els
 def safe_path(p,protected=()):
     return bool(re.fullmatch(r'[A-Za-z0-9_./-]+',p)) and not any(x in ('..','.git','') for x in p.split('/')) and not re.search(r'(?:^|/)(?:\.[^/]+|tests?|benchmarks?|harness|fixtures|runner|node_modules|vendor)(?:/|$)|(?:lock|config|secret|credential|Dockerfile|Makefile|package\.json|requirements|\.pem$|\.key$|\.(?:test|spec)\.)',p,re.I) and not any(p==f or p.startswith(f+'/') for f in protected)
 def patch_paths(patch,protected):
-    if len(patch)>200000 or not patch.startswith('diff --git ') or re.search(r'^(?:GIT binary patch|Binary files|rename |old mode|new mode|new file mode 120000|deleted file mode)',patch,re.M):raise ValueError('Unsafe patch format')
+    if len(patch)>200000 or not patch.startswith('diff --git ') or re.search(r'^(?:GIT binary patch|Binary files|rename |old mode|new mode|new file mode (?!100644$)|deleted file mode)',patch,re.M):raise ValueError('Unsafe patch format')
     paths=[]
     for a,b in re.findall(r'^diff --git a/([^\n]+) b/([^\n]+)$',patch,re.M):paths.extend([a,b])
     paths.extend(re.findall(r'^(?:---|\+\+\+) [ab]/([^\n\t]+)',patch,re.M))
@@ -112,7 +112,7 @@ class Worker:
             if sum(p.stat().st_size for p in work.rglob('*') if p.is_file() and not p.is_symlink())>256000000:raise ValueError('Checkout exceeds 256 MB')
             base,base_logs=self.measure(work,recipe);self.clean(work,head)
             protected=recipe['protectedFiles']+list(c['harness']);feedback='';manual=os.environ.get('DEVLAB_PATCH_FILE')
-            for attempt in range(3 if job['kind']=='author' and not manual else 1):
+            for attempt in range(min(3,max(1,int(os.environ.get('DEVLAB_MAX_ATTEMPTS','3')))) if job['kind']=='author' and not manual else 1):
                 self.check();self.clean(work,head)
                 if job['kind']=='verifier':patch=snap['patch']
                 elif manual:patch=pathlib.Path(manual).read_text()
@@ -153,7 +153,7 @@ class Worker:
             try:
                 job=self.api('lease',{},False)['job']
                 if not job:time.sleep(10);continue
-                self.job=job;self.deadline=time.monotonic()+min(1000,max(0,__import__('datetime').datetime.fromisoformat(job['deadline_at'].replace('Z','+00:00')).timestamp()-time.time()));self.cancel.clear()
+                self.job=job;self.deadline=time.monotonic()+min(1000,max(1,int(os.environ.get('DEVLAB_JOB_SECONDS','1000'))),max(0,__import__('datetime').datetime.fromisoformat(job['deadline_at'].replace('Z','+00:00')).timestamp()-time.time()));self.cancel.clear()
                 thread=threading.Thread(target=self.heartbeat,daemon=True);thread.start()
                 result={'jobId':job['id'],'leaseToken':job['lease_token']}
                 try:
