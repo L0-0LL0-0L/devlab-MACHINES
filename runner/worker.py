@@ -100,6 +100,7 @@ class Worker:
     def clean(self,work,head):self.git(work,'reset','--hard',head);self.git(work,'clean','-fdx')
     def execute(self,job):
         snap=job['snapshot'];recipe=snap['recipe'];c=recipe.get('calibration')
+        if sha(snap['recipeBytes'])!=snap['recipeDigest'] or json.loads(snap['recipeBytes'])!=recipe:raise ValueError('Pinned recipe digest mismatch')
         if not c or not c['harness']:raise ValueError('Calibrated recipe and immutable harness required')
         if not re.fullmatch(r'https://github.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+',snap['repository']['url']):raise ValueError('Unsafe repository URL')
         self.run(['docker','image','inspect',c['image']],limit=15)
@@ -123,11 +124,11 @@ class Worker:
                         if p.stat().st_size>18000:continue
                         try:text=p.read_text()
                         except (UnicodeError,OSError):continue
-                        if total+len(text)>24000:continue
+                        if total+len(text)>8000:continue
                         files.append({'path':path,'text':text});total+=len(text)
                         if len(files)>=6:break
                     if not files:raise ValueError('No safe bounded source selected')
-                    request={'jobId':job['id'],'leaseToken':job['lease_token'],'attemptId':str(uuid.uuid4()),'files':files,'feedback':feedback}
+                    request={'jobId':job['id'],'leaseToken':job['lease_token'],'attemptId':str(uuid.uuid4()),'files':files,'feedback':feedback[:2000]}
                     response=None
                     for retry in range(3):
                         self.check()
