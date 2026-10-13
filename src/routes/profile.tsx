@@ -1,0 +1,13 @@
+import {createFileRoute,Link} from '@tanstack/react-router';
+import {useQuery} from '@tanstack/react-query';
+import {useServerFn} from '@tanstack/react-start';
+import {useAuth} from '@/lib/auth';
+import {useCluster} from '@/lib/cluster';
+import {walletHoldings} from '@/lib/holdings.functions';
+import {supabase} from '@/integrations/supabase/client';
+import {MachineList} from '@/components/machine-list';
+import {PageHeader,SignInPrompt} from '@/components/site';
+import {Button} from '@/components/ui/button';
+import {pageMeta} from '@/lib/page-meta';
+export const Route=createFileRoute('/profile')({head:()=>pageMeta('Profile','Your owned machines, follows and confirmed Solana wallet holdings.'),component:Profile});
+function Profile(){const {user}=useAuth();const {wallet,cluster}=useCluster();const holdingsFn=useServerFn(walletHoldings);const holdings=useQuery({queryKey:['holdings','cluster',cluster,wallet],enabled:!!wallet,queryFn:()=>{if(!wallet)throw new Error('Connect wallet');return holdingsFn({data:{wallet,cluster}});},refetchInterval:30000});const follows=useQuery({queryKey:['follows',user?.id],enabled:!!user,queryFn:async()=>{if(!user)return [];const {data,error}=await supabase.from('machine_follows').select('machine_id').eq('owner_id',user.id);if(error)throw error;return data;}});return <><PageHeader eyebrow={`ACCOUNT / ${cluster}`} title="Profile"/><div className="mx-auto max-w-7xl px-5 py-10 space-y-10">{!user?<SignInPrompt what="view your profile"/>:<><section><h2 className="text-2xl mb-6">Your machines</h2><MachineList own/></section><section className="border-y border-border py-6"><h2 className="text-2xl mb-4">Following</h2>{!follows.data?.length?<p className="text-sm text-muted-foreground">No followed machines.</p>:follows.data.map(f=><Link key={f.machine_id} to="/machines/$id" params={{id:f.machine_id}} className="block underline font-mono text-xs py-2">{f.machine_id}</Link>)}</section></>}<section><h2 className="text-2xl">Confirmed holdings</h2>{!wallet?<p className="text-sm mt-4">Connect a wallet to read on-chain holdings.</p>:holdings.error?<p role="alert" className="text-destructive mt-4">{holdings.error.message}</p>:holdings.isPending?<p className="mt-4">Reading chain…</p>:<><p className="font-mono text-sm mt-4">{holdings.data?.sol} SOL</p><ul className="mt-4 divide-y divide-border">{holdings.data?.tokens.map(t=><li key={t.mint} className="py-3 flex flex-wrap justify-between gap-3 font-mono text-xs"><span className="break-all">{t.mint}</span><span>{t.amount}</span></li>)}</ul>{!holdings.data?.tokens.length&&<p className="text-sm mt-3">No non-zero token balances on {cluster}.</p>}</>}</section><Button asChild variant="outline"><Link to="/creator">Token creator fees</Link></Button></div></>;}

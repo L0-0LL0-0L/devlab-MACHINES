@@ -36,6 +36,20 @@
       "when": 1791125240360,
       "tag": "0004_external_launch_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791920682867,
+      "tag": "0005_devlab_machine_registry",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791921577510,
+      "tag": "0006_runner_replay_separation",
+      "breakpoints": true
     }
   ]
 }

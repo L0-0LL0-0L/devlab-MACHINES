@@ -10,20 +10,37 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CreatorRouteImport } from './routes/creator'
+import { Route as DeskRouteImport } from './routes/desk'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as ExplorerRouteImport } from './routes/explorer'
+import { Route as GenerationsRouteImport } from './routes/generations'
+import { Route as LaunchRouteImport } from './routes/launch'
+import { Route as MachinesRouteImport } from './routes/machines'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RepositoriesRouteImport } from './routes/repositories'
 import { Route as ResearchRouteImport } from './routes/research'
 import { Route as LaunchpadIndexRouteImport } from './routes/launchpad.index'
 import { Route as LaunchpadIdRouteImport } from './routes/launchpad.$id'
+import { Route as MachinesIndexRouteImport } from './routes/machines.index'
+import { Route as MachinesIdRouteImport } from './routes/machines.$id'
 import { Route as ApiPublicMetadataIdRouteImport } from './routes/api/public/metadata.$id'
+import { Route as ApiPublicRunnerCallbackRouteImport } from './routes/api/public/runner.callback'
+import { Route as ApiPublicRunnerLeaseRouteImport } from './routes/api/public/runner.lease'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -41,9 +58,34 @@ const CreatorRoute = CreatorRouteImport.update({
   path: '/creator',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeskRoute = DeskRouteImport.update({
+  id: '/desk',
+  path: '/desk',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExplorerRoute = ExplorerRouteImport.update({
+  id: '/explorer',
+  path: '/explorer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GenerationsRoute = GenerationsRouteImport.update({
+  id: '/generations',
+  path: '/generations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LaunchRoute = LaunchRouteImport.update({
+  id: '/launch',
+  path: '/launch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MachinesRoute = MachinesRouteImport.update({
+  id: '/machines',
+  path: '/machines',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketsRoute = MarketsRouteImport.update({
@@ -54,6 +96,16 @@ const MarketsRoute = MarketsRouteImport.update({
 const PortfolioRoute = PortfolioRouteImport.update({
   id: '/portfolio',
   path: '/portfolio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RepositoriesRoute = RepositoriesRouteImport.update({
+  id: '/repositories',
+  path: '/repositories',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResearchRoute = ResearchRouteImport.update({
@@ -71,106 +123,206 @@ const LaunchpadIdRoute = LaunchpadIdRouteImport.update({
   path: '/launchpad/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MachinesIndexRoute = MachinesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MachinesRoute,
+} as any)
+const MachinesIdRoute = MachinesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => MachinesRoute,
+} as any)
 const ApiPublicMetadataIdRoute = ApiPublicMetadataIdRouteImport.update({
   id: '/api/public/metadata/$id',
   path: '/api/public/metadata/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRunnerCallbackRoute = ApiPublicRunnerCallbackRouteImport.update({
+  id: '/api/public/runner/callback',
+  path: '/api/public/runner/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicRunnerLeaseRoute = ApiPublicRunnerLeaseRouteImport.update({
+  id: '/api/public/runner/lease',
+  path: '/api/public/runner/lease',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/creator': typeof CreatorRoute
+  '/desk': typeof DeskRoute
   '/docs': typeof DocsRoute
+  '/explorer': typeof ExplorerRoute
+  '/generations': typeof GenerationsRoute
+  '/launch': typeof LaunchRoute
+  '/machines': typeof MachinesRouteWithChildren
   '/markets': typeof MarketsRoute
   '/portfolio': typeof PortfolioRoute
+  '/profile': typeof ProfileRoute
+  '/repositories': typeof RepositoriesRoute
   '/research': typeof ResearchRoute
   '/launchpad/$id': typeof LaunchpadIdRoute
+  '/machines/$id': typeof MachinesIdRoute
   '/launchpad/': typeof LaunchpadIndexRoute
+  '/machines/': typeof MachinesIndexRoute
   '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
+  '/api/public/runner/callback': typeof ApiPublicRunnerCallbackRoute
+  '/api/public/runner/lease': typeof ApiPublicRunnerLeaseRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/creator': typeof CreatorRoute
+  '/desk': typeof DeskRoute
   '/docs': typeof DocsRoute
+  '/explorer': typeof ExplorerRoute
+  '/generations': typeof GenerationsRoute
+  '/launch': typeof LaunchRoute
   '/markets': typeof MarketsRoute
   '/portfolio': typeof PortfolioRoute
+  '/profile': typeof ProfileRoute
+  '/repositories': typeof RepositoriesRoute
   '/research': typeof ResearchRoute
   '/launchpad/$id': typeof LaunchpadIdRoute
+  '/machines/$id': typeof MachinesIdRoute
   '/launchpad': typeof LaunchpadIndexRoute
+  '/machines': typeof MachinesIndexRoute
   '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
+  '/api/public/runner/callback': typeof ApiPublicRunnerCallbackRoute
+  '/api/public/runner/lease': typeof ApiPublicRunnerLeaseRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/creator': typeof CreatorRoute
+  '/desk': typeof DeskRoute
   '/docs': typeof DocsRoute
+  '/explorer': typeof ExplorerRoute
+  '/generations': typeof GenerationsRoute
+  '/launch': typeof LaunchRoute
+  '/machines': typeof MachinesRouteWithChildren
   '/markets': typeof MarketsRoute
   '/portfolio': typeof PortfolioRoute
+  '/profile': typeof ProfileRoute
+  '/repositories': typeof RepositoriesRoute
   '/research': typeof ResearchRoute
   '/launchpad/$id': typeof LaunchpadIdRoute
+  '/machines/$id': typeof MachinesIdRoute
   '/launchpad/': typeof LaunchpadIndexRoute
+  '/machines/': typeof MachinesIndexRoute
   '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
+  '/api/public/runner/callback': typeof ApiPublicRunnerCallbackRoute
+  '/api/public/runner/lease': typeof ApiPublicRunnerLeaseRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/analytics'
     | '/auth'
     | '/community'
     | '/creator'
+    | '/desk'
     | '/docs'
+    | '/explorer'
+    | '/generations'
+    | '/launch'
+    | '/machines'
     | '/markets'
     | '/portfolio'
+    | '/profile'
+    | '/repositories'
     | '/research'
     | '/launchpad/$id'
+    | '/machines/$id'
     | '/launchpad/'
+    | '/machines/'
     | '/api/public/metadata/$id'
+    | '/api/public/runner/callback'
+    | '/api/public/runner/lease'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/analytics'
     | '/auth'
     | '/community'
     | '/creator'
+    | '/desk'
     | '/docs'
+    | '/explorer'
+    | '/generations'
+    | '/launch'
     | '/markets'
     | '/portfolio'
+    | '/profile'
+    | '/repositories'
     | '/research'
     | '/launchpad/$id'
+    | '/machines/$id'
     | '/launchpad'
+    | '/machines'
     | '/api/public/metadata/$id'
+    | '/api/public/runner/callback'
+    | '/api/public/runner/lease'
   id:
     | '__root__'
     | '/'
+    | '/analytics'
     | '/auth'
     | '/community'
     | '/creator'
+    | '/desk'
     | '/docs'
+    | '/explorer'
+    | '/generations'
+    | '/launch'
+    | '/machines'
     | '/markets'
     | '/portfolio'
+    | '/profile'
+    | '/repositories'
     | '/research'
     | '/launchpad/$id'
+    | '/machines/$id'
     | '/launchpad/'
+    | '/machines/'
     | '/api/public/metadata/$id'
+    | '/api/public/runner/callback'
+    | '/api/public/runner/lease'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnalyticsRoute: typeof AnalyticsRoute
   AuthRoute: typeof AuthRoute
   CommunityRoute: typeof CommunityRoute
   CreatorRoute: typeof CreatorRoute
+  DeskRoute: typeof DeskRoute
   DocsRoute: typeof DocsRoute
+  ExplorerRoute: typeof ExplorerRoute
+  GenerationsRoute: typeof GenerationsRoute
+  LaunchRoute: typeof LaunchRoute
+  MachinesRoute: typeof MachinesRouteWithChildren
   MarketsRoute: typeof MarketsRoute
   PortfolioRoute: typeof PortfolioRoute
+  ProfileRoute: typeof ProfileRoute
+  RepositoriesRoute: typeof RepositoriesRoute
   ResearchRoute: typeof ResearchRoute
   LaunchpadIdRoute: typeof LaunchpadIdRoute
   LaunchpadIndexRoute: typeof LaunchpadIndexRoute
   ApiPublicMetadataIdRoute: typeof ApiPublicMetadataIdRoute
+  ApiPublicRunnerCallbackRoute: typeof ApiPublicRunnerCallbackRoute
+  ApiPublicRunnerLeaseRoute: typeof ApiPublicRunnerLeaseRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -180,6 +332,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -203,11 +362,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreatorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/desk': {
+      id: '/desk'
+      path: '/desk'
+      fullPath: '/desk'
+      preLoaderRoute: typeof DeskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs': {
       id: '/docs'
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explorer': {
+      id: '/explorer'
+      path: '/explorer'
+      fullPath: '/explorer'
+      preLoaderRoute: typeof ExplorerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/generations': {
+      id: '/generations'
+      path: '/generations'
+      fullPath: '/generations'
+      preLoaderRoute: typeof GenerationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/launch': {
+      id: '/launch'
+      path: '/launch'
+      fullPath: '/launch'
+      preLoaderRoute: typeof LaunchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/machines': {
+      id: '/machines'
+      path: '/machines'
+      fullPath: '/machines'
+      preLoaderRoute: typeof MachinesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/markets': {
@@ -222,6 +416,20 @@ declare module '@tanstack/react-router' {
       path: '/portfolio'
       fullPath: '/portfolio'
       preLoaderRoute: typeof PortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/repositories': {
+      id: '/repositories'
+      path: '/repositories'
+      fullPath: '/repositories'
+      preLoaderRoute: typeof RepositoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/research': {
@@ -245,6 +453,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LaunchpadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/machines/': {
+      id: '/machines/'
+      path: '/'
+      fullPath: '/machines/'
+      preLoaderRoute: typeof MachinesIndexRouteImport
+      parentRoute: typeof MachinesRoute
+    }
+    '/machines/$id': {
+      id: '/machines/$id'
+      path: '/$id'
+      fullPath: '/machines/$id'
+      preLoaderRoute: typeof MachinesIdRouteImport
+      parentRoute: typeof MachinesRoute
+    }
     '/api/public/metadata/$id': {
       id: '/api/public/metadata/$id'
       path: '/api/public/metadata/$id'
@@ -252,21 +474,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMetadataIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/runner/callback': {
+      id: '/api/public/runner/callback'
+      path: '/api/public/runner/callback'
+      fullPath: '/api/public/runner/callback'
+      preLoaderRoute: typeof ApiPublicRunnerCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/runner/lease': {
+      id: '/api/public/runner/lease'
+      path: '/api/public/runner/lease'
+      fullPath: '/api/public/runner/lease'
+      preLoaderRoute: typeof ApiPublicRunnerLeaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface MachinesRouteChildren {
+  MachinesIdRoute: typeof MachinesIdRoute
+  MachinesIndexRoute: typeof MachinesIndexRoute
+}
+
+const MachinesRouteChildren: MachinesRouteChildren = {
+  MachinesIdRoute: MachinesIdRoute,
+  MachinesIndexRoute: MachinesIndexRoute,
+}
+
+const MachinesRouteWithChildren = MachinesRoute._addFileChildren(
+  MachinesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnalyticsRoute: AnalyticsRoute,
   AuthRoute: AuthRoute,
   CommunityRoute: CommunityRoute,
   CreatorRoute: CreatorRoute,
+  DeskRoute: DeskRoute,
   DocsRoute: DocsRoute,
+  ExplorerRoute: ExplorerRoute,
+  GenerationsRoute: GenerationsRoute,
+  LaunchRoute: LaunchRoute,
+  MachinesRoute: MachinesRouteWithChildren,
   MarketsRoute: MarketsRoute,
   PortfolioRoute: PortfolioRoute,
+  ProfileRoute: ProfileRoute,
+  RepositoriesRoute: RepositoriesRoute,
   ResearchRoute: ResearchRoute,
   LaunchpadIdRoute: LaunchpadIdRoute,
   LaunchpadIndexRoute: LaunchpadIndexRoute,
   ApiPublicMetadataIdRoute: ApiPublicMetadataIdRoute,
+  ApiPublicRunnerCallbackRoute: ApiPublicRunnerCallbackRoute,
+  ApiPublicRunnerLeaseRoute: ApiPublicRunnerLeaseRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

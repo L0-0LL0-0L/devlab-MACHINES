@@ -65,9 +65,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "biocode — decentralized science" },
-      { name: "description", content: "biocode: research, launch and publish decentralized science on Solana." },
-      { name: "theme-color", content: "#050505" },
+      { title: "devlab MACHINES — coding workbench" },
+      { name: "description", content: "Coding machines, public repositories and independently replayed generations." },
+      { name: "theme-color", content: "#efe2b2" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -78,7 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600&family=Sora:wght@200;300;400&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600&family=Sora:wght@400;500;600;700;800&display=swap",
       },
     ],
   }),
@@ -90,7 +90,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" >
       <head>
         <HeadContent />
       </head>
@@ -116,7 +116,7 @@ function RootComponent() {
             <Outlet />
           </main>
           <SiteFooter />
-          <Toaster theme="dark" />
+          <Toaster theme="light" />
         </ClusterProvider>
       </AuthProvider>
     </QueryClientProvider>

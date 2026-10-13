@@ -14,7 +14,7 @@ export const getWalletChallenge = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ wallet: walletSchema }).parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const host = (getRequestHeader("host") ?? "biocode").slice(0, 200);
+    const host = (getRequestHeader("host") ?? "devlab MACHINES").slice(0, 200);
     const since = new Date(Date.now() - 60_000).toISOString();
     const { count } = await supabaseAdmin
       .from("wallet_auth_challenges")
@@ -25,7 +25,7 @@ export const getWalletChallenge = createServerFn({ method: "POST" })
     const nonce = crypto.randomUUID();
     const expires = new Date(Date.now() + TTL_MS);
     const message = [
-      `${host} wants you to sign in to biocode with your Solana account:`,
+      `${host} wants you to sign in to devlab MACHINES with your Solana account:`,
       data.wallet,
       "",
       "Signing proves you own this wallet. It costs nothing and sends no transaction.",

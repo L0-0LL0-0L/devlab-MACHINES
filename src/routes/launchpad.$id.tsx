@@ -16,10 +16,10 @@ import {
 export const Route = createFileRoute("/launchpad/$id")({
   head: () => ({
     meta: [
-      { title: "Project token — biocode" },
-      { name: "description", content: "Research project token on a Meteora bonding curve: live price, buy, sell, creator fees and migration." },
-      { property: "og:title", content: "Project token — biocode" },
-      { property: "og:description", content: "Live Meteora bonding-curve market for a biocode research project." },
+      { title: "Project token — devlab MACHINES" },
+      { name: "description", content: "Optional machine token on a Meteora bonding curve: live price, buy, sell, creator fees and migration." },
+      { property: "og:title", content: "Project token — devlab MACHINES" },
+      { property: "og:description", content: "Live Meteora bonding-curve market for a devlab MACHINES token." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -47,7 +47,7 @@ function TokenPage() {
   const { user } = useAuth();
   const { cluster } = useCluster();
   const project = useQuery({
-    queryKey: ["project", id, user?.id ?? "anon"],
+    queryKey: ["project", "cluster", cluster, id, user?.id ?? "anon"],
     queryFn: async () => {
       const { data, error } = await supabase.from("projects").select("*").eq("id", id).maybeSingle();
       if (error) throw error;
@@ -73,7 +73,7 @@ function TokenPage() {
           {wrongCluster && <p role="alert" className="panel p-4 text-sm">This project lives on <b>{p.cluster}</b>. Switch the network in the header to interact.</p>}
           {p.mint_address && !wrongCluster && <PoolPanel mint={p.mint_address} isCreatorWallet={p.creator_wallet} dbStatus={p.status} migrationSig={p.migration_signature} migratedAt={p.migrated_at} />}
           <section className="panel p-6">
-            <h2 className="eyebrow">Thesis</h2>
+            <h2 className="eyebrow">Token description</h2>
             <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">{p.thesis}</p>
             <h2 className="eyebrow mt-6">Evidence</h2>
             <ul className="mt-2 space-y-1 text-sm">
@@ -81,7 +81,7 @@ function TokenPage() {
                 <li key={k}><a className="underline" href={e.url} target="_blank" rel="noreferrer noopener">{e.label}</a></li>
               ))}
             </ul>
-            <p className="mt-6 text-xs text-muted-foreground">Curve liquidity is not spendable research budget. Fees claimed by the creator and curve reserves are shown separately.</p>
+            <p className="mt-6 text-xs text-muted-foreground">Curve liquidity is not spendable compute budget. Fees claimed by the creator and curve reserves are shown separately.</p>
             {(p.website_url || p.x_url) && <div className="mt-6 flex gap-4 text-sm">{p.website_url && <a className="underline" href={p.website_url} target="_blank" rel="noreferrer noopener">Website</a>}{p.x_url && <a className="underline" href={p.x_url} target="_blank" rel="noreferrer noopener">X</a>}</div>}
           </section>
         </div>
