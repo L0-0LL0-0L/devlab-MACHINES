@@ -7,10 +7,19 @@ Use dedicated Linux VMs for author and two distinct verifier owners, Python 3.11
 
 1. Build `runner/Dockerfile` as a starter, extend it to install the repository dependencies and a trusted calibrated benchmark/equivalence harness. Pin the resulting Docker **image ID** `sha256:<64 hex>` in machine calibration. Mutable tags cannot execute.
 2. Install `python3 -m venv /opt/devlab/venv`, then `/opt/devlab/venv/bin/pip install -r runner/requirements.txt`. Place worker.py in /opt/devlab/runner.
-3. Generate Ed25519 keys on the coordinator. Register ONLY the Base64 public key under machine Settings. Put the signing seed and one-time runner credential into `/etc/devlab/runner.env` (permissions 0600; never commit or log it): `DEVLAB_URL`, `DEVLAB_RUNNER_TOKEN`, `DEVLAB_SIGNING_KEY`. No Anthropic key goes on the runner or in its sandbox.
+3. Enroll with proof of key possession (the private key never leaves the host):
+   ```
+   sudo install -d -m 0700 -o devlab-runner /etc/devlab
+   sudo -u devlab-runner /opt/devlab/venv/bin/python devlab_enroll.py keygen --out /etc/devlab/signing.key
+   ```
+   The command prints the Base64 public key. In the app open the machine → Settings → Enroll isolated runner, enter a label, the public key and role, and press "Request enrollment challenge". Save the challenge text exactly as `challenge.txt` on the host, then:
+   ```
+   sudo -u devlab-runner /opt/devlab/venv/bin/python devlab_enroll.py sign --key /etc/devlab/signing.key --challenge challenge.txt
+   ```
+   Paste the printed signature and press "Prove key and enroll". The challenge is single-use, owner-bound and expires after 5 minutes. Copy `runner.env.example` to `/etc/devlab/runner.env` (0600), fill `DEVLAB_URL` and the one-time `DEVLAB_RUNNER_TOKEN`; `DEVLAB_SIGNING_KEY_FILE` points at the key file. No Anthropic key goes on the runner or in its sandbox. Runners registered before key proof cannot lease jobs; use "Re-enroll with proof" to replace them.
 4. Optional `DEVLAB_PATCH_FILE` selects manual mode. Default author mode asks the authenticated app for a real patch from at most six safe source files (8 KB aggregate; server caps the entire serialized prompt to 11 KB). Three provider attempts maximum (DEVLAB_MAX_ATTEMPTS may lower this); each reserves 14,000 tokens conservatively, maximum 84,000 reserved per owner/day and one pending request per owner. Pending unknown requests are not reissued under new IDs to evade quotas. Provider timeout 110s; output capped at 3,000 tokens.
 5. Install `devlab-runner.service`, create a devlab-runner system user on this dedicated host, grant Docker access, then enable the service. Use an operator-managed service or job to poll the runner. No new paid service is required by the source package.
-6. Register two verifier workers under different accounts from one another and the author owner. Same owner/author exclusions are enforced at lease, callback and judge.
+6. Acceptance needs your own author runner plus two verifier runners enrolled from two other accounts (different from each other and from the machine owner), each with its own proven signing key. Each signing key is globally unique; lease, callback and judge exclude the author's key, any key already used on the candidate, and same-owner/same-runner identities. Account separation plus proof of key control is **not** Sybil resistance and does not prove separate physical hosts.
 
 ## Calibration
 Draft creation remains usable. Execution is blocked until Settings → Recipe calibration JSON contains:
