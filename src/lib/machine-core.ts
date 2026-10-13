@@ -1,4 +1,18 @@
 import { z } from "zod";
+export const calibrationSchema = z.object({
+  image: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+  architecture: z.enum(["x86_64", "aarch64"]),
+  toolchain: z.string().min(1).max(200),
+  holdoutSeed: z.string().min(1).max(100),
+  harness: z.record(z.string().regex(/^[a-f0-9]{64}$/)),
+  tests: z.array(z.string().min(1)).min(1).max(40),
+  metrics: z.record(
+    z.object({ min: z.number().nonnegative(), max: z.number().finite().nonnegative() }),
+  ),
+  relativeTolerance: z.number().min(0).max(0.05),
+  absoluteTolerance: z.number().min(0).max(0.001),
+  equivalenceDigest: z.string().regex(/^[a-f0-9]{64}$/),
+});
 export const recipeSchema = z.object({
   goal: z.string().min(8).max(2000),
   command: z.string().min(1).max(500),
@@ -7,6 +21,7 @@ export const recipeSchema = z.object({
   improvement: z.number().positive().max(100),
   guards: z.array(z.string()).max(20),
   protectedFiles: z.array(z.string()).max(30),
+  calibration: calibrationSchema.optional(),
 });
 export type Recipe = z.infer<typeof recipeSchema>;
 export function parseRepository(input: string) {
@@ -34,7 +49,11 @@ export function parseRepository(input: string) {
   return { owner, repo, url: `https://github.com/${owner}/${repo}` };
 }
 export function patchPaths(patch: string) {
-  if (/^diff --git .*"|^(?:old mode|new mode|deleted file mode)/m.test(patch))
+  if (
+    /^diff --git .*"|^(?:old mode|new mode|deleted file mode)|^new file mode (?!100644$)/m.test(
+      patch,
+    )
+  )
     throw new Error("Quoted paths and file mode changes are not allowed");
   const headers = [...patch.matchAll(/^diff --git a\/([^\n]+) b\/([^\n]+)$/gm)].flatMap((m) => [
     m[1] ?? "",
@@ -56,11 +75,22 @@ export function patchPaths(patch: string) {
     throw new Error("Only textual unified git patches are allowed.");
   return [...new Set(paths)];
 }
+export function safeSourcePath(p: string, protectedFiles: string[] = []) {
+  return (
+    /^[A-Za-z0-9_./-]+$/.test(p) &&
+    !p.split("/").some((x) => x === ".." || x === ".git" || x === "") &&
+    !/(?:^|\/)(?:\.[^/]+|tests?|benchmarks?|harness|fixtures|runner|node_modules|vendor)(?:\/|$)|(?:lock|config|secret|credential|Dockerfile|Makefile|package\.json|requirements|\.pem$|\.key$|\.(?:test|spec)\.)/i.test(
+      p,
+    ) &&
+    !protectedFiles.some((f) => p === f || p.startsWith(f + "/"))
+  );
+}
 export function guardPatch(patch: string, protectedFiles: string[]) {
   if (patch.length > 200000) throw new Error("Patch exceeds 200 KB.");
   const paths = patchPaths(patch);
   for (const p of paths)
     if (
+      !safeSourcePath(p, protectedFiles) ||
       p.startsWith("/") ||
       p.includes("\\") ||
       p.split("/").some((s) => s === ".." || s === ".git") ||
@@ -97,6 +127,13 @@ export type ReplayEvidence = {
   candidate: Record<string, number>;
   logs: string;
   environment: string;
+  architecture?: string;
+  toolchain?: string;
+  holdoutSeed?: string;
+  harnessDigest?: string;
+  testIdentities?: string[];
+  baselineEquivalenceDigest?: string;
+  candidateEquivalenceDigest?: string;
 };
 export type JudgeReplay = {
   runnerId: string;
@@ -119,6 +156,9 @@ export function judge(input: {
   replays: JudgeReplay[];
 }) {
   const reasons: string[] = [];
+  const calibration = input.recipe.calibration;
+  if (!calibrationReady(input.recipe)) reasons.push("Recipe calibration required");
+  const measured: ReplayEvidence[] = [];
   const valid = new Set<string>();
   const owners = new Set<string>();
   if (
@@ -146,7 +186,39 @@ export function judge(input: {
       reasons.push("Tests, equivalence or environment missing");
       continue;
     }
+    if (calibration) {
+      const e = r.evidence;
+      if (
+        e.environment !== calibration.image ||
+        e.architecture !== calibration.architecture ||
+        e.toolchain !== calibration.toolchain ||
+        e.holdoutSeed !== calibration.holdoutSeed ||
+        e.harnessDigest !== canonical(calibration.harness) ||
+        canonical(e.testIdentities) !== canonical(calibration.tests) ||
+        e.baselineEquivalenceDigest !== calibration.equivalenceDigest ||
+        e.candidateEquivalenceDigest !== calibration.equivalenceDigest
+      ) {
+        reasons.push("Pinned harness, image, toolchain or equivalence mismatch");
+        continue;
+      }
+    }
     const { baseline: b, candidate: c } = r.evidence;
+    if (
+      calibration &&
+      [b, c].some(
+        (m) =>
+          canonical(Object.keys(m).sort()) !== canonical(Object.keys(calibration.metrics).sort()) ||
+          Object.entries(m).some(
+            ([k, v]) =>
+              !Number.isFinite(v) ||
+              v < (calibration.metrics[k]?.min ?? 0) ||
+              v > (calibration.metrics[k]?.max ?? -1),
+          ),
+      )
+    ) {
+      reasons.push("Unrecognized or impossible metrics");
+      continue;
+    }
     const keys = [input.recipe.metric, ...input.recipe.guards];
     if (
       keys.some(
@@ -181,7 +253,41 @@ export function judge(input: {
     }
     owners.add(r.runnerOwner);
     valid.add(r.runnerId);
+    measured.push(r.evidence);
+  }
+  if (calibration && measured.length >= 2) {
+    const first = measured[0];
+    if (first)
+      for (const e of measured.slice(1))
+        for (const phase of ["baseline", "candidate"] as const)
+          for (const k of Object.keys(calibration.metrics)) {
+            const a = first[phase][k] ?? NaN,
+              b = e[phase][k] ?? NaN;
+            if (
+              Math.abs(a - b) >
+              calibration.absoluteTolerance +
+                calibration.relativeTolerance * Math.max(Math.abs(a), Math.abs(b))
+            )
+              reasons.push("Independent replay measurements disagree");
+          }
   }
   if (valid.size < 2) reasons.push("Two independent verifier identities required");
   return { accepted: reasons.length === 0, reasons, verifiers: [...valid] };
+}
+
+export function calibrationReady(recipe: Recipe) {
+  const c = recipe.calibration;
+  if (!c) return false;
+  return (
+    Object.keys(c.harness).length > 0 &&
+    Object.keys(c.metrics).includes(recipe.metric) &&
+    recipe.guards.every((g) => Object.keys(c.metrics).includes(g)) &&
+    Object.entries(c.metrics).every(([, range]) => range.max >= range.min) &&
+    Object.keys(c.harness).every(
+      (p) =>
+        /^[A-Za-z0-9_./-]+$/.test(p) &&
+        !p.startsWith("/") &&
+        !p.split("/").some((x) => x === ".." || x === ""),
+    )
+  );
 }

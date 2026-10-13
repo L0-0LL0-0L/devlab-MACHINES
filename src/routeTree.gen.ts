@@ -31,7 +31,10 @@ import { Route as MachinesIndexRouteImport } from './routes/machines.index'
 import { Route as MachinesIdRouteImport } from './routes/machines.$id'
 import { Route as ApiPublicMetadataIdRouteImport } from './routes/api/public/metadata.$id'
 import { Route as ApiPublicRunnerCallbackRouteImport } from './routes/api/public/runner.callback'
+import { Route as ApiPublicRunnerHeartbeatRouteImport } from './routes/api/public/runner.heartbeat'
+import { Route as ApiPublicRunnerJudgeRouteImport } from './routes/api/public/runner.judge'
 import { Route as ApiPublicRunnerLeaseRouteImport } from './routes/api/public/runner.lease'
+import { Route as ApiPublicRunnerProposeRouteImport } from './routes/api/public/runner.propose'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -143,9 +146,25 @@ const ApiPublicRunnerCallbackRoute = ApiPublicRunnerCallbackRouteImport.update({
   path: '/api/public/runner/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRunnerHeartbeatRoute =
+  ApiPublicRunnerHeartbeatRouteImport.update({
+    id: '/api/public/runner/heartbeat',
+    path: '/api/public/runner/heartbeat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicRunnerJudgeRoute = ApiPublicRunnerJudgeRouteImport.update({
+  id: '/api/public/runner/judge',
+  path: '/api/public/runner/judge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRunnerLeaseRoute = ApiPublicRunnerLeaseRouteImport.update({
   id: '/api/public/runner/lease',
   path: '/api/public/runner/lease',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicRunnerProposeRoute = ApiPublicRunnerProposeRouteImport.update({
+  id: '/api/public/runner/propose',
+  path: '/api/public/runner/propose',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -172,7 +191,10 @@ export interface FileRoutesByFullPath {
   '/machines/': typeof MachinesIndexRoute
   '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
   '/api/public/runner/callback': typeof ApiPublicRunnerCallbackRoute
+  '/api/public/runner/heartbeat': typeof ApiPublicRunnerHeartbeatRoute
+  '/api/public/runner/judge': typeof ApiPublicRunnerJudgeRoute
   '/api/public/runner/lease': typeof ApiPublicRunnerLeaseRoute
+  '/api/public/runner/propose': typeof ApiPublicRunnerProposeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -196,7 +218,10 @@ export interface FileRoutesByTo {
   '/machines': typeof MachinesIndexRoute
   '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
   '/api/public/runner/callback': typeof ApiPublicRunnerCallbackRoute
+  '/api/public/runner/heartbeat': typeof ApiPublicRunnerHeartbeatRoute
+  '/api/public/runner/judge': typeof ApiPublicRunnerJudgeRoute
   '/api/public/runner/lease': typeof ApiPublicRunnerLeaseRoute
+  '/api/public/runner/propose': typeof ApiPublicRunnerProposeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -222,7 +247,10 @@ export interface FileRoutesById {
   '/machines/': typeof MachinesIndexRoute
   '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
   '/api/public/runner/callback': typeof ApiPublicRunnerCallbackRoute
+  '/api/public/runner/heartbeat': typeof ApiPublicRunnerHeartbeatRoute
+  '/api/public/runner/judge': typeof ApiPublicRunnerJudgeRoute
   '/api/public/runner/lease': typeof ApiPublicRunnerLeaseRoute
+  '/api/public/runner/propose': typeof ApiPublicRunnerProposeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -249,7 +277,10 @@ export interface FileRouteTypes {
     | '/machines/'
     | '/api/public/metadata/$id'
     | '/api/public/runner/callback'
+    | '/api/public/runner/heartbeat'
+    | '/api/public/runner/judge'
     | '/api/public/runner/lease'
+    | '/api/public/runner/propose'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -273,7 +304,10 @@ export interface FileRouteTypes {
     | '/machines'
     | '/api/public/metadata/$id'
     | '/api/public/runner/callback'
+    | '/api/public/runner/heartbeat'
+    | '/api/public/runner/judge'
     | '/api/public/runner/lease'
+    | '/api/public/runner/propose'
   id:
     | '__root__'
     | '/'
@@ -298,7 +332,10 @@ export interface FileRouteTypes {
     | '/machines/'
     | '/api/public/metadata/$id'
     | '/api/public/runner/callback'
+    | '/api/public/runner/heartbeat'
+    | '/api/public/runner/judge'
     | '/api/public/runner/lease'
+    | '/api/public/runner/propose'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -322,7 +359,10 @@ export interface RootRouteChildren {
   LaunchpadIndexRoute: typeof LaunchpadIndexRoute
   ApiPublicMetadataIdRoute: typeof ApiPublicMetadataIdRoute
   ApiPublicRunnerCallbackRoute: typeof ApiPublicRunnerCallbackRoute
+  ApiPublicRunnerHeartbeatRoute: typeof ApiPublicRunnerHeartbeatRoute
+  ApiPublicRunnerJudgeRoute: typeof ApiPublicRunnerJudgeRoute
   ApiPublicRunnerLeaseRoute: typeof ApiPublicRunnerLeaseRoute
+  ApiPublicRunnerProposeRoute: typeof ApiPublicRunnerProposeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -481,11 +521,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRunnerCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/runner/heartbeat': {
+      id: '/api/public/runner/heartbeat'
+      path: '/api/public/runner/heartbeat'
+      fullPath: '/api/public/runner/heartbeat'
+      preLoaderRoute: typeof ApiPublicRunnerHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/runner/judge': {
+      id: '/api/public/runner/judge'
+      path: '/api/public/runner/judge'
+      fullPath: '/api/public/runner/judge'
+      preLoaderRoute: typeof ApiPublicRunnerJudgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/runner/lease': {
       id: '/api/public/runner/lease'
       path: '/api/public/runner/lease'
       fullPath: '/api/public/runner/lease'
       preLoaderRoute: typeof ApiPublicRunnerLeaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/runner/propose': {
+      id: '/api/public/runner/propose'
+      path: '/api/public/runner/propose'
+      fullPath: '/api/public/runner/propose'
+      preLoaderRoute: typeof ApiPublicRunnerProposeRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -526,7 +587,10 @@ const rootRouteChildren: RootRouteChildren = {
   LaunchpadIndexRoute: LaunchpadIndexRoute,
   ApiPublicMetadataIdRoute: ApiPublicMetadataIdRoute,
   ApiPublicRunnerCallbackRoute: ApiPublicRunnerCallbackRoute,
+  ApiPublicRunnerHeartbeatRoute: ApiPublicRunnerHeartbeatRoute,
+  ApiPublicRunnerJudgeRoute: ApiPublicRunnerJudgeRoute,
   ApiPublicRunnerLeaseRoute: ApiPublicRunnerLeaseRoute,
+  ApiPublicRunnerProposeRoute: ApiPublicRunnerProposeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

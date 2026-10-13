@@ -4,13 +4,16 @@ async function github(path: string, raw = false) {
     headers: {
       Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json",
       "User-Agent": "devlab-machines",
+      ...(process.env["GITHUB_TOKEN"]
+        ? { Authorization: `Bearer ${process.env["GITHUB_TOKEN"]}` }
+        : {}),
     },
     redirect: "error",
     signal: AbortSignal.timeout(15000),
   });
   if (!response.ok)
     throw new Error(
-      `GitHub ${response.status}: ${response.status === 404 ? "Public repository or file not found" : (await response.text()).slice(0, 250)}`,
+      `GitHub ${response.status}: ${response.status === 404 ? "Public repository or file not found" : response.status === 403 ? "Repository lookup rate limited. Retry later or configure an operator GITHUB_TOKEN for higher lookup limits." : "Repository lookup unavailable"}`,
     );
   const reader = response.body?.getReader();
   if (!reader) throw new Error("GitHub returned no body");

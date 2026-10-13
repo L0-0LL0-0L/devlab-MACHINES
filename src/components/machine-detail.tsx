@@ -1,3 +1,4 @@
+import { MachineFunding } from "./machine-funding";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -55,6 +56,7 @@ export function MachineDetail({
     [busy, setBusy] = useState(false),
     [soul, setSoul] = useState<string | null>(null),
     [recipe, setRecipe] = useState<Recipe | null>(null),
+    [calibrationText, setCalibrationText] = useState<string | null>(null),
     [paths, setPaths] = useState(""),
     [runnerLabel, setRunnerLabel] = useState(""),
     [publicKey, setPublicKey] = useState(""),
@@ -472,6 +474,7 @@ export function MachineDetail({
                 Pool creation, trades, claims and migration require your wallet approval. No
                 automatic fees-to-compute routing is configured.
               </p>
+              <MachineFunding id={id} cluster={cluster} />
             </>
           ) : (
             <p className="text-sm">Private financial records are visible only to the owner.</p>
@@ -496,11 +499,31 @@ export function MachineDetail({
               onChange={(e) => setRecipe({ ...currentRecipe, goal: e.target.value })}
             />
           </label>
+          <label className="block text-sm">
+            Recipe calibration JSON
+            <textarea
+              className="field mt-2 min-h-48 font-mono text-xs"
+              value={calibrationText ?? JSON.stringify(currentRecipe.calibration ?? {}, null, 2)}
+              onChange={(e) => setCalibrationText(e.target.value)}
+            />
+          </label>
           <Button
             disabled={busy}
             onClick={() =>
               perform(() =>
-                settingsFn({ data: { id, soul: soul ?? m.soul, recipe: currentRecipe } }),
+                settingsFn({
+                  data: {
+                    id,
+                    soul: soul ?? m.soul,
+                    recipe: recipeSchema.parse({
+                      ...currentRecipe,
+                      calibration:
+                        calibrationText === null
+                          ? currentRecipe.calibration
+                          : JSON.parse(calibrationText),
+                    }),
+                  },
+                }),
               )
             }
           >

@@ -1,0 +1,25 @@
+import { it, expect } from "vitest";
+it("rolls back injected partial candidate writes and atomically deduplicates receipts", async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc("test_machine_pipeline_atomicity");
+  expect(error).toBeNull();
+  expect(data).toEqual({
+    fixturesPersisted: false,
+    failureInjectionRollback: true,
+    conflictingReceiptRejected: true,
+    idempotentCandidateAndQueue: true,
+  });
+});
+it("atomically advances immutable heads and separates duplicate receipts across networks", async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc("test_machine_head_and_receipts");
+  expect(error).toBeNull();
+  expect(data).toEqual({
+    fixturesPersisted: false,
+    immutableAncestry: true,
+    networkSeparation: true,
+    receiptIdempotency: true,
+    receiptConflictRejected: true,
+    atomicHeadAndIdempotentGeneration: true,
+  });
+});

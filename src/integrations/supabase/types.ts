@@ -55,6 +55,82 @@ export type Database = {
           },
         ]
       }
+      machine_author_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          owner_id: string
+          request_digest: string
+          result: Json | null
+          status: string
+          token_reservation: number
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          job_id: string
+          owner_id: string
+          request_digest: string
+          result?: Json | null
+          status?: string
+          token_reservation?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          owner_id?: string
+          request_digest?: string
+          result?: Json | null
+          status?: string
+          token_reservation?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_author_attempts_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "machine_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      machine_callback_receipts: {
+        Row: {
+          created_at: string
+          job_id: string
+          payload_bytes: string
+          payload_digest: string
+          result: Json
+          runner_id: string
+        }
+        Insert: {
+          created_at?: string
+          job_id: string
+          payload_bytes: string
+          payload_digest: string
+          result: Json
+          runner_id: string
+        }
+        Update: {
+          created_at?: string
+          job_id?: string
+          payload_bytes?: string
+          payload_digest?: string
+          result?: Json
+          runner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_callback_receipts_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "machine_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       machine_candidates: {
         Row: {
           author_id: string
@@ -218,6 +294,59 @@ export type Database = {
           },
         ]
       }
+      machine_funding_receipts: {
+        Row: {
+          amount_lamports: number
+          cluster: string
+          created_at: string
+          id: string
+          kind: string
+          machine_id: string
+          owner_id: string
+          provenance: Json
+          recipient: string
+          sender: string
+          signature: string
+          slot: number
+        }
+        Insert: {
+          amount_lamports: number
+          cluster: string
+          created_at?: string
+          id?: string
+          kind: string
+          machine_id: string
+          owner_id: string
+          provenance: Json
+          recipient: string
+          sender: string
+          signature: string
+          slot: number
+        }
+        Update: {
+          amount_lamports?: number
+          cluster?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          machine_id?: string
+          owner_id?: string
+          provenance?: Json
+          recipient?: string
+          sender?: string
+          signature?: string
+          slot?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_funding_receipts_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       machine_generations: {
         Row: {
           baseline_commit: string
@@ -277,6 +406,7 @@ export type Database = {
         Row: {
           attempts: number
           created_at: string
+          deadline_at: string
           error: string | null
           finished_at: string | null
           id: string
@@ -292,6 +422,7 @@ export type Database = {
         Insert: {
           attempts?: number
           created_at?: string
+          deadline_at?: string
           error?: string | null
           finished_at?: string | null
           id?: string
@@ -307,6 +438,7 @@ export type Database = {
         Update: {
           attempts?: number
           created_at?: string
+          deadline_at?: string
           error?: string | null
           finished_at?: string | null
           id?: string
@@ -385,6 +517,7 @@ export type Database = {
           recipe_digest: string
           runner_id: string
           signature: string
+          signed_bytes: string | null
           signed_payload: Json
           status: string
         }
@@ -402,6 +535,7 @@ export type Database = {
           recipe_digest: string
           runner_id: string
           signature: string
+          signed_bytes?: string | null
           signed_payload?: Json
           status: string
         }
@@ -419,6 +553,7 @@ export type Database = {
           recipe_digest?: string
           runner_id?: string
           signature?: string
+          signed_bytes?: string | null
           signed_payload?: Json
           status?: string
         }
@@ -482,6 +617,8 @@ export type Database = {
       machines: {
         Row: {
           created_at: string
+          funding_config: Json | null
+          head_commit: string | null
           id: string
           model: string
           name: string
@@ -498,6 +635,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          funding_config?: Json | null
+          head_commit?: string | null
           id?: string
           model?: string
           name: string
@@ -514,6 +653,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          funding_config?: Json | null
+          head_commit?: string | null
           id?: string
           model?: string
           name?: string
@@ -976,6 +1117,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_machine_jobs: {
+        Args: { p_machine: string; p_owner: string }
+        Returns: undefined
+      }
+      commit_machine_callback: {
+        Args: {
+          p_bytes: string
+          p_digest: string
+          p_evidence_digest: string
+          p_fail?: boolean
+          p_job: string
+          p_lease: string
+          p_patch_digest: string
+          p_payload: Json
+          p_recipe_digest: string
+          p_runner: string
+          p_signature: string
+        }
+        Returns: Json
+      }
       finish_machine_job: {
         Args: {
           p_job: string
@@ -986,6 +1147,7 @@ export type Database = {
         Returns: {
           attempts: number
           created_at: string
+          deadline_at: string
           error: string | null
           finished_at: string | null
           id: string
@@ -1004,12 +1166,17 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      heartbeat_machine_job: {
+        Args: { p_job: string; p_lease: string; p_runner: string }
+        Returns: string
       }
       lease_machine_job: {
         Args: { p_runner: string }
         Returns: {
           attempts: number
           created_at: string
+          deadline_at: string
           error: string | null
           finished_at: string | null
           id: string
@@ -1029,6 +1196,40 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      publish_machine_generation: {
+        Args: { p_candidate: string; p_decision: Json; p_replays: string[] }
+        Returns: Json
+      }
+      queue_machine_author: {
+        Args: { p_machine: string; p_owner: string }
+        Returns: Json
+      }
+      record_machine_funding: {
+        Args: {
+          p_amount: string
+          p_cluster: string
+          p_machine: string
+          p_owner: string
+          p_provenance: Json
+          p_recipient: string
+          p_sender: string
+          p_signature: string
+          p_slot: number
+        }
+        Returns: Json
+      }
+      reserve_author_attempt: {
+        Args: {
+          p_digest: string
+          p_id: string
+          p_job: string
+          p_lease: string
+          p_runner: string
+        }
+        Returns: Json
+      }
+      test_machine_head_and_receipts: { Args: never; Returns: Json }
+      test_machine_pipeline_atomicity: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
