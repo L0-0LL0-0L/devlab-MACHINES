@@ -153,7 +153,7 @@ export function judge(input: {
 }) {
   const reasons: string[] = [];
   const calibration = input.recipe.calibration;
-  if (!calibration) reasons.push("Recipe calibration required");
+  if (!calibrationReady(input.recipe)) reasons.push("Recipe calibration required");
   const measured: ReplayEvidence[] = [];
   const valid = new Set<string>();
   const owners = new Set<string>();
@@ -270,3 +270,5 @@ export function judge(input: {
   if (valid.size < 2) reasons.push("Two independent verifier identities required");
   return { accepted: reasons.length === 0, reasons, verifiers: [...valid] };
 }
+
+export function calibrationReady(recipe:Recipe){const c=recipe.calibration;if(!c)return false;return Object.keys(c.harness).length>0 && Object.keys(c.metrics).includes(recipe.metric) && recipe.guards.every(g=>Object.keys(c.metrics).includes(g)) && Object.entries(c.metrics).every(([,range])=>range.max>=range.min) && Object.keys(c.harness).every(p=>/^[A-Za-z0-9_./-]+$/.test(p)&&!p.startsWith('/')&&!p.split('/').some(x=>x==='..'||x===''));}
