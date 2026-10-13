@@ -15,10 +15,10 @@ import {
 export const Route = createFileRoute("/creator")({
   head: () => ({
     meta: [
-      { title: "Creator dashboard — biocode" },
-      { name: "description", content: "Check unclaimed creator trading fees on your launched biocode tokens and claim them to your wallet." },
-      { property: "og:title", content: "Creator dashboard — biocode" },
-      { property: "og:description", content: "On-chain creator fees and claims for biocode research token launches." },
+      { title: "Token creator fees — devlab MACHINES" },
+      { name: "description", content: "Check unclaimed creator trading fees on your launched devlab MACHINES tokens and claim them to your wallet." },
+      { property: "og:title", content: "Token creator fees — devlab MACHINES" },
+      { property: "og:description", content: "On-chain creator fees and claims for devlab MACHINES token launches." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -39,7 +39,7 @@ function CreatorDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase.from("projects")
         .select("id,title,symbol,status,mint_address,creator_wallet,launched_at")
-        .eq("owner_id", user!.id).eq("cluster", cluster).in("status", ["live", "migrated"])
+        .eq("owner_id", user?.id ?? "").eq("cluster", cluster).in("status", ["live", "migrated"])
         .order("launched_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -48,13 +48,13 @@ function CreatorDashboard() {
   const balance = useQuery({
     queryKey: ["sol-balance", "cluster", cluster, wallet],
     enabled: !!wallet,
-    queryFn: () => balanceFn({ data: { cluster, wallet: wallet! } }),
+    queryFn: () => balanceFn({ data: { cluster, wallet: wallet ?? "" } }),
     refetchInterval: 20000,
   });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <PageHeader eyebrow="creator" title="creator dashboard">{`Unclaimed trading fees read live from each Meteora pool on ${cluster}. Claims are signed by your wallet and sent straight to it.`}</PageHeader>
+      <PageHeader eyebrow="creator" title="Token creator fees">{`Unclaimed trading fees read live from each Meteora pool on ${cluster}. Claims are signed by your wallet and sent straight to it.`}</PageHeader>
       {!user ? <SignInPrompt what="see your launched tokens and claim fees" /> : (
         <div className="space-y-6">
           <section className="panel flex flex-wrap items-center justify-between gap-4 p-5">

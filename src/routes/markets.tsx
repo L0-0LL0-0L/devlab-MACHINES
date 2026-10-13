@@ -11,10 +11,12 @@ import { getPoolState, syncExternalBiocodeLaunch } from "@/lib/dbc.functions";
 export const Route = createFileRoute("/markets")({
   head: () => ({
     meta: [
-      { title: "Markets — biocode" },
-      { name: "description", content: "Meteora markets for launched biocode science projects on Solana." },
-      { property: "og:title", content: "Markets — biocode" },
-      { property: "og:description", content: "DeSci project markets on Solana." },
+      { title: "Markets — devlab MACHINES" },
+      { name: "description", content: "Meteora markets for launched tokens on Solana." },
+      { property: "og:title", content: "Markets — devlab MACHINES" },
+      { property: "og:description", content: "Verified token markets on Solana." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Markets,
@@ -74,7 +76,7 @@ function Markets() {
         </div>
         {rows.length === 0 && <div className="mt-8">
           <EmptyState title="Nothing is tradable yet" action={<Button asChild size="sm" variant="outline"><Link to="/launchpad">Prepare a launch</Link></Button>}>
-            biocode does not list or simulate prices. Markets appear only after a project creates a real pool.
+            devlab MACHINES does not list or simulate prices. Markets appear only after a project creates a real pool.
           </EmptyState>
         </div>}
       </div>

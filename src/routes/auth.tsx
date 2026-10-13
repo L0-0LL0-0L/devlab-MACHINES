@@ -14,10 +14,10 @@ import { LogoMark } from "@/components/Logo";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in with Solana — biocode" },
-      { name: "description", content: "Sign in to biocode by signing a free message with your Solana wallet." },
-      { property: "og:title", content: "Sign in with Solana — biocode" },
-      { property: "og:description", content: "Wallet-based sign-in for the biocode research and launch workspace." },
+      { title: "Sign in with Solana — devlab MACHINES" },
+      { name: "description", content: "Sign in to devlab MACHINES by signing a free message with your Solana wallet." },
+      { property: "og:title", content: "Sign in with Solana — devlab MACHINES" },
+      { property: "og:description", content: "Wallet-based sign-in for the devlab MACHINES coding machine workbench." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -34,7 +34,7 @@ function AuthPage() {
   const [noWallet, setNoWallet] = useState(false);
 
   useEffect(() => {
-    if (user) navigate({ to: "/portfolio", replace: true });
+    if (user) navigate({ to: "/profile", replace: true });
   }, [user, navigate]);
 
   async function signIn() {

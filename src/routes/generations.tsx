@@ -1,0 +1,59 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { PageHeader, EmptyState } from "@/components/site";
+import { pageMeta } from "@/lib/page-meta";
+export const Route = createFileRoute("/generations")({
+  head: () =>
+    pageMeta(
+      "Generations",
+      "Accepted generations with pinned commits and independent replay decisions.",
+    ),
+  component: Generations,
+});
+function Generations() {
+  const q = useQuery({
+    queryKey: ["generations"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("machine_generations")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+  return (
+    <>
+      <PageHeader eyebrow="ACCEPTED CHAIN" title="Generations" />
+      <div className="mx-auto max-w-7xl px-5 py-10">
+        {q.error ? (
+          <p role="alert">{q.error.message}</p>
+        ) : q.isPending ? (
+          <p>Reading generations…</p>
+        ) : !q.data?.length ? (
+          <EmptyState title="No accepted generations yet">
+            Proposals do not appear here. Acceptance requires real independent replays and passing
+            fixed guards.
+          </EmptyState>
+        ) : (
+          q.data.map((g) => (
+            <article key={g.id} className="border-y border-border py-5">
+              <Link
+                to="/machines/$id"
+                params={{ id: g.machine_id }}
+                className="font-display font-bold underline"
+              >
+                Generation {g.id}
+              </Link>
+              <p className="font-mono text-xs mt-3 break-all">
+                {g.baseline_commit} → {g.candidate_commit}
+              </p>
+              <pre className="text-xs mt-4">{JSON.stringify(g.decision, null, 2)}</pre>
+            </article>
+          ))
+        )}
+      </div>
+    </>
+  );
+}

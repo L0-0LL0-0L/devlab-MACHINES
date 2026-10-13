@@ -1,29 +1,13 @@
-# Welcome to your Lovable project
+# devlab MACHINES
 
-This project was built with [Lovable](https://lovable.dev).
+A coding-machine workbench built with TanStack Start, React, Lovable Cloud, wallet-only Solana authentication, Claude Sonnet 5.5/Jev and wallet-approved Meteora token rails.
 
-## Build with Lovable
+- `/launch`: six-step registry creation with real GitHub validation and pinned recipes.
+- `/machines/:id`: settings, owner controls, source, candidate diffs, signed replay evidence and private funding ledger.
+- `/explorer`, `/repositories`, `/generations`, `/analytics`: real persisted public records.
+- `/desk`, `/profile`: saved choices, follows and real confirmed wallet holdings.
+- `/docs`: architecture and provider health.
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Historical private scientific records are retained but not converted into coding machines. Historical token identities remain unchanged and separate from the registry.
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+Run the selective tests with `bunx vitest run src/lib/machine-core.test.ts src/lib/research-core.test.ts`. See `runner/README.md` for the standalone isolated execution package and `docs/verification.md` for actual checks and blockers.

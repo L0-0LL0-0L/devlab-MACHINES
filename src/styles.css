@@ -38,30 +38,22 @@
 }
 
 :root {
-  --radius: 0.25rem;
-  --background: oklch(0.11 0 0); /* #050505 */
-  --foreground: oklch(0.97 0 0); /* #f5f5f5 */
-  --card: oklch(0.17 0 0);
-  --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.17 0 0);
-  --popover-foreground: oklch(0.97 0 0);
-  --panel: oklch(0.155 0 0);
-  --panel-2: oklch(0.2 0 0);
-  --line: oklch(0.3 0 0);
-  --primary: oklch(0.97 0 0);
-  --primary-foreground: oklch(0.11 0 0);
-  --secondary: oklch(0.22 0 0);
-  --secondary-foreground: oklch(0.97 0 0);
-  --muted: oklch(0.2 0 0);
-  --muted-foreground: oklch(0.68 0 0);
-  --accent: oklch(0.24 0 0);
-  --accent-foreground: oklch(0.97 0 0);
-  --destructive: oklch(0.65 0.18 25);
-  --destructive-foreground: oklch(0.97 0 0);
-  --border: oklch(0.27 0 0);
-  --input: oklch(0.3 0 0);
-  --ring: oklch(0.8 0 0);
-  --grid-line: color-mix(in oklab, var(--foreground) 6%, transparent);
+ --radius: 0.25rem;
+ --background: oklch(0.91 0.065 94);
+ --foreground: oklch(0.19 0.01 80);
+ --card: oklch(0.97 0.018 90); --card-foreground: var(--foreground);
+ --popover: var(--card); --popover-foreground: var(--foreground);
+ --panel: oklch(0.965 0.025 90); --panel-2: oklch(0.86 0.085 63);
+ --line: oklch(0.70 0.035 85);
+ --primary: oklch(0.22 0.012 80); --primary-foreground: oklch(0.98 0.02 90);
+ --secondary: oklch(0.86 0.085 63); --secondary-foreground: var(--foreground);
+ --muted: oklch(0.89 0.045 92); --muted-foreground: oklch(0.42 0.025 80);
+ --accent: oklch(0.81 0.12 188); --accent-foreground: var(--foreground);
+ --destructive: oklch(0.48 0.18 25); --destructive-foreground: var(--card);
+ --border: oklch(0.25 0.01 80); --input: oklch(0.55 0.025 80); --ring: oklch(0.60 0.13 230);
+ --screen-cyan: oklch(0.81 0.12 188); --screen-green: oklch(0.78 0.17 145); --screen-magenta: oklch(0.69 0.23 335); --screen-orange: oklch(0.74 0.18 50); --screen-blue: oklch(0.58 0.18 255);
+ --shadow-hardware: 4px 4px 0 var(--border);
+ --grid-line: color-mix(in oklab, var(--foreground) 9%, transparent);
 }
 
 @layer base {
@@ -69,7 +61,7 @@
     border-color: var(--color-border);
   }
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
   body {
     background-color: var(--color-background);
@@ -79,8 +71,8 @@
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-weight: 300;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    letter-spacing: 0;
   }
   :focus-visible {
     outline: 1px solid var(--ring);
@@ -91,8 +83,8 @@
 @utility eyebrow {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: lowercase;
+  letter-spacing: 0;
+  text-transform: uppercase;
   color: var(--muted-foreground);
 }
 
@@ -125,3 +117,13 @@
     border-color: var(--ring);
   }
 }
+
+@theme inline {
+ --color-screen-cyan: var(--screen-cyan); --color-screen-green: var(--screen-green); --color-screen-magenta: var(--screen-magenta); --color-screen-orange: var(--screen-orange); --color-screen-blue: var(--screen-blue);
+ --shadow-hardware: var(--shadow-hardware);
+}
+@utility hardware { border: 2px solid var(--border); background: var(--panel); box-shadow: var(--shadow-hardware); border-radius: 4px; }
+@utility spectrum { background: linear-gradient(90deg,var(--screen-cyan) 0% 20%,var(--screen-green) 20% 40%,var(--screen-magenta) 40% 60%,var(--screen-orange) 60% 80%,var(--screen-blue) 80%); }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+input, textarea, select { min-width: 0; }
+@media (prefers-reduced-motion: no-preference) { .boot-in { animation: boot-in .5s ease-out both; } @keyframes boot-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } } }
