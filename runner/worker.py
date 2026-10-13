@@ -54,7 +54,7 @@ def require_regular(modes,path,allow_missing=False):
 
 class Worker:
     def __init__(self):
-        self.url=os.environ['DEVLAB_URL'].rstrip('/');self.token=os.environ['DEVLAB_RUNNER_TOKEN'];self.key=SigningKey(base64.b64decode(os.environ['DEVLAB_SIGNING_KEY']))
+        self.url=os.environ['DEVLAB_URL'].rstrip('/');self.token=os.environ['DEVLAB_RUNNER_TOKEN'];self.key=SigningKey(base64.b64decode((pathlib.Path(os.environ['DEVLAB_SIGNING_KEY_FILE']).read_text().strip() if os.environ.get('DEVLAB_SIGNING_KEY_FILE') else os.environ['DEVLAB_SIGNING_KEY']),validate=True))
         self.deadline=0;self.cancel=threading.Event();self.job=None;self.work=None
     def api(self,path,body,signed=True):
         data=envelope(body,self.key) if signed else body
