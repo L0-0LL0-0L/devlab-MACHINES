@@ -1,0 +1,19 @@
+[Unit]
+Description=devlab MACHINES isolated coordinator
+After=docker.service network-online.target
+Requires=docker.service
+[Service]
+Type=simple
+User=devlab-runner
+WorkingDirectory=/opt/devlab/runner
+EnvironmentFile=/etc/devlab/runner.env
+ExecStart=/opt/devlab/venv/bin/python /opt/devlab/runner/worker.py
+Restart=on-failure
+RestartSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/devlab /tmp
+[Install]
+WantedBy=multi-user.target

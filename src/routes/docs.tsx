@@ -28,7 +28,7 @@ const sections = [
   [
     "author",
     "Author worker",
-    "Claude Sonnet 5.5 can write a working soul and propose a patch from explicitly selected pinned files. Proposed patches are not executed in this app. Text patches cannot touch protected files, paths outside the checkout, credentials or runner infrastructure. The isolated author worker applies a real supplied candidate and measures it.",
+    "Claude Sonnet 5.5 can write a working soul and propose a patch from explicitly selected pinned files. Proposed patches are not executed in this app. Text patches cannot touch protected files, paths outside the checkout, credentials or runner infrastructure. The isolated author selects bounded real source, obtains a lease-bound Sonnet patch, measures unchanged harness results and iterates at most three times. Manual patch mode is optional.",
   ],
   [
     "sandbox",
@@ -43,12 +43,12 @@ const sections = [
   [
     "acceptance",
     "Acceptance judge",
-    "Two independent verifier identities are required. Author and same-owner identities are excluded. Commit, patch and recipe digests must match. Tests and equivalence must pass. Required metrics must exist and be finite; positive target baseline and the configured percent improvement are mandatory. Guard metrics must not increase. Missing or failed evidence never becomes an accepted generation.",
+    "Two independent verifier identities are required. Author and same-owner identities are excluded. Commit, patch and recipe digests must match. Tests and equivalence must pass. Calibrated image, architecture, toolchain, seed, harness hashes and equivalence identities must match. Independent measurements must agree within pinned tolerances. Required metrics must exist, be within calibrated bounds and be finite; positive target baseline and the configured percent improvement are mandatory. Guard metrics must not increase. Missing or failed evidence never becomes an accepted generation.",
   ],
   [
     "recipe",
     "Recipe output",
-    "The pinned benchmark command must exit successfully and emit one final JSON line with metrics, testsPassed and equivalent. Guard definitions, benchmark code and tests must be protected. The command is executed for both baseline and candidate; logs and image digest accompany the signed receipt. Recipes are custom configurations, not claims of a certified verifier network.",
+    "The pinned benchmark command must exit successfully and emit one final JSON line with metrics, testsPassed, equivalent, testIdentities and equivalenceDigest. Guard definitions, benchmark code and tests must be protected. The command is executed for both baseline and candidate; logs and image digest accompany the signed receipt. Recipes are custom configurations, not claims of a certified verifier network.",
   ],
   [
     "runtime",
@@ -63,12 +63,12 @@ const sections = [
   [
     "funding",
     "Tokens & funding",
-    "Optional machine tokens use Meteora with wallet-approved creation, simulation, signing and confirmation. The chain is verified before token publication. Received funds and claimed fees are separate from liquidity. No automated fees-to-compute routing or hosted billing is configured, so runway is unavailable. Historical tokens stay separate from machine registry entries.",
+    "Optional machine tokens use Meteora with wallet-approved creation, simulation, signing and confirmation. The chain is verified before token publication. Owner-authorized confirmed SOL deposits require an exact machine memo, verified signer and recipient, selected network and exact lamports. Received deposits, claimed fees and liquidity remain separate. No automated fees-to-compute routing or hosted billing is configured, so runway is unavailable. Historical tokens stay separate from machine registry entries.",
   ],
   [
     "setup",
     "Self-hosted setup",
-    "Use the runner package in this project: build runner/Dockerfile into a dependency-ready pinned image, install runner/requirements.txt, create an Ed25519 keypair locally, register the public key under machine Settings, and set DEVLAB_URL, DEVLAB_RUNNER_TOKEN, DEVLAB_SIGNING_KEY and DEVLAB_IMAGE before running runner/worker.py. Authors also set DEVLAB_PATCH_FILE to a real proposed diff. See the detailed setup document in runner/README.md. Two independent owners must operate verifier runners for acceptance.",
+    "Use the runner package in this project: build runner/Dockerfile into a dependency-ready pinned image, install runner/requirements.txt, create an Ed25519 keypair locally, register the public key under machine Settings, and set DEVLAB_URL, DEVLAB_RUNNER_TOKEN, DEVLAB_SIGNING_KEY  before running runner/worker.py. Authors use the bounded automatic loop by default; DEVLAB_PATCH_FILE enables optional manual diff mode. Configure recipe calibration JSON in machine Settings. See the detailed setup document in runner/README.md. Two independent owners must operate verifier runners for acceptance.",
   ],
 ];
 function Docs() {

@@ -15,6 +15,7 @@ const recipe: Recipe = {
   improvement: 5,
   guards: ["memory"],
   protectedFiles: ["benchmark.py", "tests"],
+ calibration:{image:'sha256:'+'a'.repeat(64),architecture:'x86_64',toolchain:'python-3.12',holdoutSeed:'seed-1',harness:{'benchmark.py':'b'.repeat(64)},tests:['equivalence-v1'],metrics:{latency:{min:0,max:1000},memory:{min:0,max:1000}},relativeTolerance:0.01,absoluteTolerance:0,equivalenceDigest:'c'.repeat(64)},
 };
 const baseline = "a".repeat(40),
   candidate = "b".repeat(40);
@@ -32,7 +33,7 @@ const replay = (id: string): JudgeReplay => ({
     baseline: { latency: 100, memory: 20 },
     candidate: { latency: 90, memory: 20 },
     logs: "real",
-    environment: "image@sha256:abc",
+    environment: recipe.calibration?.image??'',architecture:'x86_64',toolchain:'python-3.12',holdoutSeed:'seed-1',harnessDigest:canonical(recipe.calibration?.harness),testIdentities:['equivalence-v1'],baselineEquivalenceDigest:'c'.repeat(64),candidateEquivalenceDigest:'c'.repeat(64),
   },
 });
 const input = (replays: JudgeReplay[]) => ({
@@ -131,4 +132,14 @@ describe("Verifier ownership separation", () => {
     b.runnerOwner = a.runnerOwner;
     expect(judge(input([a, b])).accepted).toBe(false);
   });
+});
+
+describe('Calibrated reproducibility',()=>{
+ it('blocks uncalibrated recipes',()=>expect(judge({...input([replay('v1'),replay('v2')]),recipe:{...recipe,calibration:undefined}}).accepted).toBe(false));
+ it('rejects disagreement beyond 1 percent',()=>{const r=replay('v2');r.evidence.candidate['latency']=80;expect(judge(input([replay('v1'),r])).accepted).toBe(false);});
+ it('rejects wrong image',()=>{const r=replay('v2');r.evidence.environment='mutable:latest';expect(judge(input([replay('v1'),r])).accepted).toBe(false);});
+ it('rejects negative metric',()=>{const r=replay('v2');r.evidence.candidate['latency']=-1;expect(judge(input([replay('v1'),r])).accepted).toBe(false);});
+ it('rejects unrecognized metric',()=>{const r=replay('v2');r.evidence.candidate['fake']=1;expect(judge(input([replay('v1'),r])).accepted).toBe(false);});
+ it('rejects false equivalence digest',()=>{const r=replay('v2');r.evidence.candidateEquivalenceDigest='wrong';expect(judge(input([replay('v1'),r])).accepted).toBe(false);});
+ it('protects locks, harness and configurations',()=>{for(const p of ['Cargo.lock','package.json','src/config.ts','harness/run.py','.github/workflows/x'])expect(()=>guardPatch(`diff --git a/${p} b/${p}\n--- a/${p}\n+++ b/${p}`,[])).toThrow();});
 });
