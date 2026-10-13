@@ -24,6 +24,9 @@
 
 - Machine lifecycle writes go through authenticated server functions after an RLS owner read; clients receive SELECT-only registry/evidence grants — prevents forged job results and generations.
 - Machine domain logic lives in machine-core.ts, GitHub fetches in github.server.ts, RPC in machines.functions.ts and runner callbacks in runner.server.ts — keeps judge rules independently testable and secrets server-only.
-- Runner jobs use database-atomic leases and signed callbacks with one-use lease consumption; external execution lives in runner/worker.py with restricted Docker containers — web requests never execute repository commands.
+- Runner v2 signs exact immutable UTF-8 payload bytes; PostgreSQL receipts atomically consume leases and persist results/queues/events, with retryable locked generation publication — prevents cross-language signature drift and partial callbacks.
+- Autonomous proposals require active owned author leases, persisted idempotent attempt reservations and hard quotas; provider keys stay in the app — prevents unbounded paid calls and sandbox secret exposure.
+- Execution runs on dedicated Docker hosts with pinned calibration and strict accepted-chain reconstruction; drafts remain blocked until recipe/image/harness configuration exists — avoids arbitrary-command verification claims.
+- Confirmed machine funding uses exact lamports, explicit machine memos and network/signature uniqueness through owner-authenticated reconciliation — separates deposited funds from owner balances, liquidity and hosted credits.
 - Optional machine token projects are explicitly linked by owner-authorized preparation; existing token verification/signing stays in dbc modules — the chain never leads the registry nor relabels historical mints.
 - Historical research/community/portfolio/launchpad index URLs redirect to the new product; historical data and compatible wallet email identifiers remain untouched — preserves accounts and records while removing old public positioning.
