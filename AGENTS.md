@@ -30,3 +30,5 @@
 - Confirmed machine funding uses exact lamports, explicit machine memos and network/signature uniqueness through owner-authenticated reconciliation — separates deposited funds from owner balances, liquidity and hosted credits.
 - Optional machine token projects are explicitly linked by owner-authorized preparation; existing token verification/signing stays in dbc modules — the chain never leads the registry nor relabels historical mints.
 - Historical research/community/portfolio/launchpad index URLs redirect to the new product; historical data and compatible wallet email identifiers remain untouched — preserves accounts and records while removing old public positioning.
+- Runner identities qualify only after Ed25519 proof of possession over a single-use owner-bound challenge; normalized keys are globally unique and replay keys must differ from author/prior keys — prevents claiming others' keys or self-replay.
+- The runner ZIP is built only by scripts/build-runner-zip.py from an allowlist with fixed timestamps — keeps the download reproducible and secret-free.
