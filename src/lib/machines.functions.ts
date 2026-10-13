@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { recipeSchema, canonical, digest, guardPatch, calibrationReady } from "./machine-core";
+import { recipeSchema, canonical, digest, calibrationReady } from "./machine-core";
 const idSchema = z.object({ id: z.string().uuid() });
 export const validateRepository = createServerFn({ method: "POST" })
   .inputValidator((v: unknown) => z.object({ url: z.string().max(300) }).parse(v))

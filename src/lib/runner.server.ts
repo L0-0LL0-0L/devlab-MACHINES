@@ -9,6 +9,7 @@ import {
   type ReplayEvidence,
 } from "./machine-core";
 import { verifyEnvelope } from "./runner-signing";
+import { keySeparationError } from "./runner-enrollment";
 const leaseSchema = z.object({ jobId: z.string().uuid(), leaseToken: z.string().uuid() });
 const evidenceSchema = z
   .object({
@@ -52,13 +53,23 @@ export async function evaluateCandidate(id: string) {
   const recipe = recipeSchema.parse((job.snapshot as { recipe: unknown }).recipe);
   const { data: rs } = await db.from("machine_replays").select("*").eq("candidate_id", id);
   const replays = [];
+  const { data: author } = await db
+    .from("machine_runners")
+    .select("signing_key_norm,key_verified_at")
+    .eq("id", c.author_id)
+    .maybeSingle();
+  const authorKey = author?.key_verified_at ? author.signing_key_norm : null;
+  const usedKeys: string[] = [];
   for (const r of rs ?? []) {
     const { data: identity } = await db
       .from("machine_runners")
-      .select("public_key,owner_id")
+      .select("public_key,owner_id,signing_key_norm,key_verified_at")
       .eq("id", r.runner_id)
       .single();
     if (!identity) continue;
+    const ownKey = identity.key_verified_at ? identity.signing_key_norm : null;
+    const separation = keySeparationError(ownKey, authorKey, usedKeys);
+    if (ownKey) usedKeys.push(ownKey);
     let valid = false;
     try {
       const signed = verifyEnvelope(
@@ -85,6 +96,7 @@ export async function evaluateCandidate(id: string) {
         | undefined;
       valid =
         valid &&
+        !separation &&
         replayJob?.runner_id === r.runner_id &&
         replayJob.lease_token === body.leaseToken &&
         snap?.candidateId === c.id &&
@@ -147,6 +159,11 @@ export async function runnerRequest(
     .eq("active", true)
     .single();
   if (!runner) return Response.json({ error: "Invalid runner credential" }, { status: 401 });
+  if (!runner.key_verified_at || !runner.signing_key_norm)
+    return Response.json(
+      { error: "Runner signing key not proven; re-enroll this runner from the machine settings" },
+      { status: 403 },
+    );
   if (mode === "lease") {
     const { data, error } = await db.rpc("lease_machine_job", { p_runner: runner.id });
     if (error) throw error;
@@ -219,6 +236,35 @@ export async function runnerRequest(
           throw new Error("Author measurement failed: " + check.reasons.join("; "));
       } else if (body.candidateCommit !== snap.candidateCommit)
         throw new Error("Candidate commit mismatch");
+    }
+    if (job.kind === "verifier") {
+      const candidateId = (job.snapshot as { candidateId?: string }).candidateId;
+      const { data: cand } = await db
+        .from("machine_candidates")
+        .select("author_id")
+        .eq("id", candidateId ?? "")
+        .maybeSingle();
+      const { data: author } = cand
+        ? await db
+            .from("machine_runners")
+            .select("signing_key_norm,key_verified_at")
+            .eq("id", cand.author_id)
+            .maybeSingle()
+        : { data: null };
+      const { data: prior } = await db
+        .from("machine_replays")
+        .select("runner_id")
+        .eq("candidate_id", candidateId ?? "");
+      const priorIds = (prior ?? []).map((p) => p.runner_id);
+      const { data: priorKeys } = priorIds.length
+        ? await db.from("machine_runners").select("signing_key_norm").in("id", priorIds)
+        : { data: [] };
+      const problem = keySeparationError(
+        runner.signing_key_norm,
+        author?.key_verified_at ? author.signing_key_norm : null,
+        (priorKeys ?? []).map((p) => p.signing_key_norm),
+      );
+      if (problem) return Response.json({ error: problem }, { status: 409 });
     }
     const { data, error } = await db.rpc("commit_machine_callback", {
       p_job: job.id,
