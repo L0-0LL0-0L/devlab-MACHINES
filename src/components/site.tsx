@@ -8,7 +8,13 @@ import { useAuth } from "@/lib/auth";
 import { useCluster, shortAddr, type Cluster } from "@/lib/cluster";
 
 export const NAV = [
- {to:'/explorer',label:'Explorer'}, {to:'/machines',label:'Machines'}, {to:'/repositories',label:'Repositories'}, {to:'/generations',label:'Generations'}, {to:'/analytics',label:'Analytics'}, {to:'/desk',label:'Desk'}, {to:'/docs',label:'Docs'},
+  { to: "/explorer", label: "Explorer" },
+  { to: "/machines", label: "Machines" },
+  { to: "/repositories", label: "Repositories" },
+  { to: "/generations", label: "Generations" },
+  { to: "/analytics", label: "Analytics" },
+  { to: "/desk", label: "Desk" },
+  { to: "/docs", label: "Docs" },
 ] as const;
 
 function ClusterSelect() {
@@ -98,12 +104,16 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="ml-auto hidden items-center gap-2 lg:flex">
-          <Button size="sm" asChild><Link to="/launch">Launch</Link></Button>
+          <Button size="sm" asChild>
+            <Link to="/launch">Launch</Link>
+          </Button>
           <ClusterSelect />
           <WalletButton />
           <AccountButton />
         </div>
-        <Button variant="ghost" size="icon"
+        <Button
+          variant="ghost"
+          size="icon"
           className="ml-auto lg:hidden"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
@@ -116,7 +126,12 @@ export function SiteHeader() {
         <div className="border-t border-border px-5 py-4 lg:hidden">
           <nav aria-label="Mobile" className="flex flex-col">
             {NAV.map((n) => (
-              <Link key={n.to} to={n.to} onClick={() => setOpen(false)} className="py-2 text-foreground">
+              <Link
+                key={n.to}
+                to={n.to}
+                onClick={() => setOpen(false)}
+                className="py-2 text-foreground"
+              >
                 {n.label}
               </Link>
             ))}
@@ -146,29 +161,54 @@ export function SiteFooter() {
           <p className="eyebrow mb-3">platform</p>
           <ul className="space-y-2 text-sm">
             {NAV.slice(0, 4).map((n) => (
-              <li key={n.to}><Link to={n.to} className="text-muted-foreground hover:text-foreground">{n.label}</Link></li>
+              <li key={n.to}>
+                <Link to={n.to} className="text-muted-foreground hover:text-foreground">
+                  {n.label}
+                </Link>
+              </li>
             ))}
           </ul>
         </div>
         <div>
           <p className="eyebrow mb-3">more</p>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/profile" className="text-muted-foreground hover:text-foreground">Profile</Link></li>
-            <li><Link to="/docs" className="text-muted-foreground hover:text-foreground">Docs</Link></li>
-            <li><Link to="/auth" className="text-muted-foreground hover:text-foreground">Account</Link></li>
+            <li>
+              <Link to="/profile" className="text-muted-foreground hover:text-foreground">
+                Profile
+              </Link>
+            </li>
+            <li>
+              <Link to="/docs" className="text-muted-foreground hover:text-foreground">
+                Docs
+              </Link>
+            </li>
+            <li>
+              <Link to="/auth" className="text-muted-foreground hover:text-foreground">
+                Account
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
       <div className="border-t border-border">
         <p className="mx-auto max-w-7xl px-5 py-5 font-mono text-xs text-muted-foreground">
-          © {new Date().getFullYear()} devlab MACHINES · public code, measured progress · mainnet by default
+          © {new Date().getFullYear()} devlab MACHINES · public code, measured progress · mainnet by
+          default
         </p>
       </div>
     </footer>
   );
 }
 
-export function PageHeader({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
+export function PageHeader({
+  eyebrow,
+  title,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  children?: ReactNode;
+}) {
   return (
     <section className="grid-bg border-b border-border">
       <div className="mx-auto max-w-7xl px-5 py-16 md:py-20">
@@ -180,7 +220,15 @@ export function PageHeader({ eyebrow, title, children }: { eyebrow: string; titl
   );
 }
 
-export function EmptyState({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
+export function EmptyState({
+  title,
+  children,
+  action,
+}: {
+  title: string;
+  children?: ReactNode;
+  action?: ReactNode;
+}) {
   return (
     <div className="panel flex flex-col items-start gap-3 border-dashed p-8">
       <p className="eyebrow">no records</p>
@@ -195,7 +243,11 @@ export function SignInPrompt({ what }: { what: string }) {
   return (
     <EmptyState
       title={`Sign in to ${what}`}
-      action={<Button asChild size="sm"><Link to="/auth">Sign in with wallet</Link></Button>}
+      action={
+        <Button asChild size="sm">
+          <Link to="/auth">Sign in with wallet</Link>
+        </Button>
+      }
     >
       Browsing is public. Saving work requires an account so only you can access it.
     </EmptyState>
