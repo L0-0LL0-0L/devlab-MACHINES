@@ -55,6 +55,12 @@ export function patchPaths(patch: string) {
     )
   )
     throw new Error("Quoted paths and file mode changes are not allowed");
+  // Existing entries also carry their mode on the index line: only regular files may be patched.
+  for (const m of patch.matchAll(/^index [^\n]*$/gm))
+    if (!/^index [0-9a-f]{7,64}\.\.[0-9a-f]{7,64}(?: 100644)?$/.test(m[0]))
+      throw new Error("Only regular non-executable files may be patched (symlink/submodule/mode blocked)");
+  if (/^(?:similarity index|copy from|copy to|dissimilarity index)/m.test(patch))
+    throw new Error("Copies and renames are not allowed");
   const headers = [...patch.matchAll(/^diff --git a\/([^\n]+) b\/([^\n]+)$/gm)].flatMap((m) => [
     m[1] ?? "",
     m[2] ?? "",
