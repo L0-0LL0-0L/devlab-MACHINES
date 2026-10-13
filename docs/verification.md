@@ -27,7 +27,7 @@
 - Real database head/receipt test: atomic head + idempotent generation; ancestry mutation rejected; receipt idempotency, same-signature cross-network separation and conflicting amount rejected. All fixtures rolled back.
 - Python producer → JS consumer and JS producer → Python consumer tests cover tiny exponent/large exponent, negative zero, Unicode and reordered nested objects. Reserialization invalidates signatures, as intended.
 - `python3 -m unittest discover -s runner -p 'test_*.py'`: **3 passed**. Pure protected-source and strict chain/digest/candidate checks. These mock Git application; no claim of physical commit reconstruction verification.
-- Harness automatic build/typecheck latest observed: **build OK** 2026-10-13 20:31:39 UTC. No manual build/typecheck was run (platform runs them automatically).
+- Harness automatic build/typecheck latest observed: **build OK** 2026-10-13 20:30:13 UTC. No manual build/typecheck was run (platform runs them automatically).
 - Local real Git fixture commit test could not execute because sandbox disallows stateful Git commands; test rewritten as pure chain checks. Docker binary unavailable, so actual isolated author/verifier execution remains untested here.
 
 ## Exact remaining setup/external dependencies
