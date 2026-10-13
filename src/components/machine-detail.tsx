@@ -17,7 +17,6 @@ import {
   Star,
   Shield,
   Copy,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,8 +27,9 @@ import { useCluster } from "@/lib/cluster";
 import {
   machineAction,
   saveSettings,
-  proposePatch,
-  registerRunner,
+  createRunnerChallenge,
+  completeRunnerEnrollment,
+  listMyRunners,
 } from "@/lib/machines.functions";
 import { prepareMachineToken } from "@/lib/token-machine.functions";
 import { recipeSchema, type Recipe } from "@/lib/machine-core";
@@ -49,15 +49,18 @@ export function MachineDetail({
   const qc = useQueryClient();
   const action = useServerFn(machineAction),
     settingsFn = useServerFn(saveSettings),
-    patchFn = useServerFn(proposePatch),
-    runnerFn = useServerFn(registerRunner),
+    challengeFn = useServerFn(createRunnerChallenge),
+    enrollFn = useServerFn(completeRunnerEnrollment),
+    runnersFn = useServerFn(listMyRunners),
     tokenFn = useServerFn(prepareMachineToken);
   const [tab, setTab] = useState(initialTab),
     [busy, setBusy] = useState(false),
     [soul, setSoul] = useState<string | null>(null),
     [recipe, setRecipe] = useState<Recipe | null>(null),
     [calibrationText, setCalibrationText] = useState<string | null>(null),
-    [paths, setPaths] = useState(""),
+    [challenge, setChallenge] = useState<{ challengeId: string; message: string } | null>(null),
+    [enrollSignature, setEnrollSignature] = useState(""),
+    [replaceRunnerId, setReplaceRunnerId] = useState<string | null>(null),
     [runnerLabel, setRunnerLabel] = useState(""),
     [publicKey, setPublicKey] = useState(""),
     [runnerRole, setRunnerRole] = useState<"author" | "verifier">("author"),
@@ -112,6 +115,11 @@ export function MachineDetail({
       };
     },
     refetchInterval: 15000,
+  });
+  const runners = useQuery({
+    queryKey: ["machine", "runners", user?.id],
+    queryFn: () => runnersFn(),
+    enabled: !!user && q.data?.m.owner_id === user.id,
   });
   async function perform(fn: () => Promise<unknown>) {
     setBusy(true);
@@ -327,43 +335,7 @@ export function MachineDetail({
       )}
       {tab === "candidates" && (
         <section className="space-y-6">
-          {own && (
-            <div className="border-b border-border pb-6">
-              <label className="block text-sm">
-                Pinned file paths (comma-separated)
-                <input
-                  className="field mt-2"
-                  value={paths}
-                  onChange={(e) => setPaths(e.target.value)}
-                  placeholder="src/parser.ts, src/cache.ts"
-                />
-              </label>
-              <Button
-                className="mt-3"
-                variant="outline"
-                disabled={busy || !paths.trim()}
-                onClick={() =>
-                  perform(() =>
-                    patchFn({
-                      data: {
-                        id,
-                        paths: paths
-                          .split(",")
-                          .map((p) => p.trim())
-                          .filter(Boolean),
-                      },
-                    }),
-                  )
-                }
-              >
-                <Sparkles />
-                {busy ? "Proposing…" : "Propose patch with Claude"}
-              </Button>
-              <p className="text-xs text-muted-foreground mt-3">
-                Proposal only. No tests run here. Export the diff to your isolated author runner.
-              </p>
-            </div>
-          )}
+          {own && <AuthorSessionStatus jobs={jobs} recipe={currentRecipe} />}
           {!candidates.length ? (
             <EmptyState title="No patch candidates" />
           ) : (
@@ -531,7 +503,12 @@ export function MachineDetail({
             Save settings
           </Button>
           <div className="border-t border-border pt-6 space-y-4">
-            <h2 className="text-xl">Register isolated runner</h2>
+            <h2 className="text-xl">Enroll isolated runner</h2>
+            <p className="text-sm text-muted-foreground">
+              Generate the signing key on the runner host with the downloadable CLI. Paste only its
+              public key here, sign the challenge on the host, then paste the signature. The private
+              key never leaves the host.
+            </p>
             <input
               aria-label="Runner label"
               className="field"
@@ -542,9 +519,9 @@ export function MachineDetail({
             <input
               aria-label="Runner public signing key"
               className="field font-mono text-xs"
-              placeholder="Base64 Ed25519 public key"
+              placeholder="Base64 Ed25519 public key (44 characters)"
               value={publicKey}
-              onChange={(e) => setPublicKey(e.target.value)}
+              onChange={(e) => setPublicKey(e.target.value.trim())}
             />
             <select
               aria-label="Runner role"
@@ -555,20 +532,76 @@ export function MachineDetail({
               <option value="author">Author — own jobs</option>
               <option value="verifier">Verifier — other owners only</option>
             </select>
+            {replaceRunnerId && (
+              <p className="text-xs font-mono">
+                Re-enrolling replaces runner {replaceRunnerId.slice(0, 8)} once proven.{" "}
+                <button className="underline" onClick={() => setReplaceRunnerId(null)}>
+                  Cancel
+                </button>
+              </p>
+            )}
             <Button
-              disabled={busy}
+              disabled={busy || !runnerLabel.trim() || !publicKey}
               variant="outline"
               onClick={() =>
                 perform(async () => {
-                  const r = await runnerFn({
-                    data: { label: runnerLabel, publicKey, role: runnerRole },
-                  });
-                  setCredential(r.token);
+                  setCredential("");
+                  setEnrollSignature("");
+                  setChallenge(
+                    await challengeFn({
+                      data: { label: runnerLabel, publicKey, role: runnerRole, replaceRunnerId },
+                    }),
+                  );
                 })
               }
             >
-              Register runner
+              1. Request enrollment challenge
             </Button>
+            {challenge && (
+              <div className="border border-border p-4 space-y-3">
+                <p className="text-sm">
+                  Save this exact text as <code>challenge.txt</code> on the host and run{" "}
+                  <code>python3 devlab_enroll.py sign --key /etc/devlab/signing.key --challenge challenge.txt</code>
+                  . Expires in 5 minutes; single use.
+                </p>
+                <textarea
+                  aria-label="Enrollment challenge"
+                  readOnly
+                  className="field font-mono text-xs min-h-40"
+                  value={challenge.message}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigator.clipboard.writeText(challenge.message)}
+                >
+                  <Copy />
+                  Copy challenge
+                </Button>
+                <input
+                  aria-label="Challenge signature"
+                  className="field font-mono text-xs"
+                  placeholder="Base64 signature printed by the CLI"
+                  value={enrollSignature}
+                  onChange={(e) => setEnrollSignature(e.target.value.trim())}
+                />
+                <Button
+                  disabled={busy || !enrollSignature}
+                  onClick={() =>
+                    perform(async () => {
+                      const r = await enrollFn({
+                        data: { challengeId: challenge.challengeId, signature: enrollSignature },
+                      });
+                      setCredential(r.token);
+                      setChallenge(null);
+                      setReplaceRunnerId(null);
+                    })
+                  }
+                >
+                  2. Prove key and enroll
+                </Button>
+              </div>
+            )}
             {credential && (
               <div className="border border-border p-4">
                 <p className="text-sm">Runner credential — shown once. Keep private.</p>
@@ -590,12 +623,92 @@ export function MachineDetail({
                 </Button>
               </div>
             )}
-            <Link to="/docs" className="block underline text-sm">
-              Runner setup documentation ↗
+            <RunnerList
+              runners={runners.data ?? []}
+              onReenroll={(r) => {
+                setReplaceRunnerId(r.id);
+                setRunnerLabel(r.label);
+                setRunnerRole(r.role as "author" | "verifier");
+              }}
+            />
+            <Link to="/docs" hash="runner" className="block underline text-sm">
+              Runner download and setup documentation ↗
             </Link>
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+type RunnerRow = {
+  id: string;
+  label: string;
+  role: string;
+  active: boolean;
+  proven: boolean;
+  fingerprint: string | null;
+  replaced: boolean;
+};
+function RunnerList({
+  runners,
+  onReenroll,
+}: {
+  runners: RunnerRow[];
+  onReenroll: (r: RunnerRow) => void;
+}) {
+  if (!runners.length) return <p className="text-sm text-muted-foreground">No runners enrolled.</p>;
+  return (
+    <div className="space-y-2">
+      <h3 className="font-mono text-xs">YOUR RUNNERS (ALL MACHINES)</h3>
+      {runners.map((r) => (
+        <div key={r.id} className="border border-border p-3 flex flex-wrap gap-3 items-center justify-between text-sm">
+          <span>
+            {r.label} · {r.role} ·{" "}
+            <span className="font-mono text-xs">
+              {r.proven ? `key ${r.fingerprint}… proven` : "key NOT proven"}
+              {r.active ? "" : r.replaced ? " · replaced" : " · inactive"}
+            </span>
+          </span>
+          {r.active && !r.proven && (
+            <Button size="sm" variant="outline" onClick={() => onReenroll(r)}>
+              Re-enroll with proof
+            </Button>
+          )}
+        </div>
+      ))}
+      <p className="text-xs text-muted-foreground">
+        Unproven runners cannot lease jobs or count as verifiers. Proof shows control of a signing key
+        under a separate account; it is not Sybil resistance or proof of separate physical hosts.
+      </p>
+    </div>
+  );
+}
+function AuthorSessionStatus({
+  jobs,
+  recipe,
+}: {
+  jobs: { id: string; kind: string; status: string; attempts: number; created_at: string }[];
+  recipe: Recipe;
+}) {
+  const latest = jobs.find((j) => j.kind === "author");
+  const calibrated = !!recipe.calibration && Object.keys(recipe.calibration.harness ?? {}).length > 0;
+  return (
+    <div className="border-b border-border pb-6 space-y-2">
+      <h2 className="text-xl">Author session</h2>
+      <p className="font-mono text-xs">
+        CALIBRATION / {calibrated ? "configured" : "missing — execution blocked"}
+      </p>
+      <p className="font-mono text-xs">
+        LATEST AUTHOR JOB /{" "}
+        {latest ? `${latest.status} · attempt ${latest.attempts} of 3 · ${new Date(latest.created_at).toLocaleString()}` : "none yet"}
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Press Run to queue an author session. Your enrolled, key-proven author runner leases it,
+        asks Claude for patches from bounded source, measures them in Docker against the pinned
+        recipe, and only submits a candidate that passes. Candidates appear below; two independently
+        owned verifier runners then replay them before any generation is accepted.
+      </p>
     </div>
   );
 }

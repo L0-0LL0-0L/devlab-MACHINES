@@ -14,3 +14,10 @@
 - [x] Calibrated replay agreement, exact-byte signatures, heartbeat and isolation bounds
 - [x] Confirmed machine SOL receipt reconciliation and wallet links
 - [x] Domain/integration/browser checks and updated verification
+
+## Review fixes (1bf6bca)
+- [x] Runner key proof-of-possession enrollment, uniqueness and key separation
+- [x] Remove dead propose control; recipe v2 docs
+- [x] Index-mode/symlink/tree guards (JS+Python)
+- [x] Downloadable reproducible runner ZIP + enrollment CLI
+- [x] Checks, browser roundtrip, verification doc

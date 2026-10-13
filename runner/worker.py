@@ -11,6 +11,9 @@ def safe_path(p,protected=()):
     return bool(re.fullmatch(r'[A-Za-z0-9_./-]+',p)) and not any(x in ('..','.git','') for x in p.split('/')) and not re.search(r'(?:^|/)(?:\.[^/]+|tests?|benchmarks?|harness|fixtures|runner|node_modules|vendor)(?:/|$)|(?:lock|config|secret|credential|Dockerfile|Makefile|package\.json|requirements|\.pem$|\.key$|\.(?:test|spec)\.)',p,re.I) and not any(p==f or p.startswith(f+'/') for f in protected)
 def patch_paths(patch,protected):
     if len(patch)>200000 or not patch.startswith('diff --git ') or re.search(r'^(?:GIT binary patch|Binary files|rename |old mode|new mode|new file mode (?!100644$)|deleted file mode)',patch,re.M):raise ValueError('Unsafe patch format')
+    for line in re.findall(r'^index [^\n]*$',patch,re.M):
+        if not re.fullmatch(r'index [0-9a-f]{7,64}\.\.[0-9a-f]{7,64}(?: 100644)?',line):raise ValueError('Only regular files may be patched (symlink/submodule/mode blocked)')
+    if re.search(r'^(?:similarity index|dissimilarity index|copy from|copy to|rename from|rename to)',patch,re.M):raise ValueError('Copies and renames are not allowed')
     paths=[]
     for a,b in re.findall(r'^diff --git a/([^\n]+) b/([^\n]+)$',patch,re.M):paths.extend([a,b])
     paths.extend(re.findall(r'^(?:---|\+\+\+) [ab]/([^\n\t]+)',patch,re.M))
@@ -28,9 +31,30 @@ def qualifying(base,candidate,recipe):
     gain=(b-v if recipe['direction']=='lower' else v-b)/b*100
     return gain>=recipe['improvement'] and all(candidate['metrics'][k]<=base['metrics'][k] for k in recipe['guards'])
 
+def contained(work,path):
+    """Resolve path under checkout root, rejecting symlinked ancestors or escapes."""
+    root=pathlib.Path(work).resolve();p=root
+    for part in pathlib.PurePosixPath(path).parts:
+        if part in ('','.','..'):raise ValueError('Unsafe path component')
+        p=p/part
+        if p.is_symlink():raise ValueError('Symlink in path blocked: '+path)
+    resolved=p.resolve()
+    if resolved!=root and root not in resolved.parents:raise ValueError('Path escapes checkout')
+    return resolved
+def tree_modes(ls_tree_output):
+    out={}
+    for entry in ls_tree_output.split('\0'):
+        if not entry:continue
+        meta,path=entry.split('\t',1);mode=meta.split(' ')[0];out[path]=mode
+    return out
+def require_regular(modes,path,allow_missing=False):
+    mode=modes.get(path)
+    if mode is None and allow_missing:return
+    if mode!='100644':raise ValueError('Git tree entry is not a regular file: '+path)
+
 class Worker:
     def __init__(self):
-        self.url=os.environ['DEVLAB_URL'].rstrip('/');self.token=os.environ['DEVLAB_RUNNER_TOKEN'];self.key=SigningKey(base64.b64decode(os.environ['DEVLAB_SIGNING_KEY']))
+        self.url=os.environ['DEVLAB_URL'].rstrip('/');self.token=os.environ['DEVLAB_RUNNER_TOKEN'];self.key=SigningKey(base64.b64decode((pathlib.Path(os.environ['DEVLAB_SIGNING_KEY_FILE']).read_text().strip() if os.environ.get('DEVLAB_SIGNING_KEY_FILE') else os.environ['DEVLAB_SIGNING_KEY']),validate=True))
         self.deadline=0;self.cancel=threading.Event();self.job=None;self.work=None
     def api(self,path,body,signed=True):
         data=envelope(body,self.key) if signed else body
@@ -60,12 +84,17 @@ class Worker:
                 out.seek(0);return out.read(1000000).decode(errors='replace')
             finally:
                 if proc.poll() is None:os.killpg(proc.pid,signal.SIGKILL);proc.wait()
+    def modes(self,work,paths):
+        paths=sorted(set(paths)|{str(a) for p in paths for a in pathlib.PurePosixPath(p).parents if str(a)!='.'})
+        return tree_modes(self.git(work,'ls-tree','-z','HEAD','--',*paths)) if paths else {}
     def git(self,work,*args):return self.run(['git','-c','core.hooksPath=/dev/null','-c','core.fsmonitor=false',*args],cwd=work)
     def apply(self,work,patch,protected):
         paths=patch_paths(patch,protected)
+        modes=self.modes(work,paths)
         for path in paths:
-            p=work/path
-            if p.is_symlink() or any(x.is_symlink() for x in p.parents if x!=work.parent):raise ValueError('Symlink patch blocked')
+            contained(work,path);require_regular(modes,path,allow_missing=not (work/path).exists())
+            for parent in pathlib.PurePosixPath(path).parents:
+                if str(parent)!='.' and modes.get(str(parent)) not in (None,'040000'):raise ValueError('Non-directory ancestor in tree: '+str(parent))
         with tempfile.NamedTemporaryFile(mode='w',suffix='.diff') as f:
             f.write(patch);f.flush();self.git(work,'apply','--check',f.name);self.git(work,'apply',f.name)
         self.git(work,'add','--all')
@@ -85,8 +114,9 @@ class Worker:
         c=recipe['calibration']; image=c['image']
         if not re.fullmatch(r'sha256:[a-f0-9]{64}',image):raise ValueError('Immutable image required')
         if platform.machine()!=c['architecture']:raise ValueError('Architecture mismatch')
+        modes=self.modes(work,list(c['harness']))
         for path,expected in c['harness'].items():
-            p=work/path
+            p=contained(work,path);require_regular(modes,path)
             if p.is_symlink() or not p.is_file() or sha(p.read_bytes())!=expected:raise ValueError('Pinned harness digest mismatch')
         name='devlab-'+uuid.uuid4().hex
         args=['docker','run','--name',name,'--rm','--network','none','--read-only','--user','65534:65534','--cap-drop','ALL','--security-opt','no-new-privileges','--pids-limit','128','--memory','2g','--cpus','2','--tmpfs','/tmp:rw,noexec,nosuid,size=128m','--tmpfs','/work/.git:rw,noexec,nosuid,size=1m','-e','DEVLAB_HOLDOUT_SEED='+c['holdoutSeed'],'-v',str(work)+':/work:rw',image,'sh','-lc',recipe['command']]
@@ -118,9 +148,12 @@ class Worker:
                 elif manual:patch=pathlib.Path(manual).read_text()
                 else:
                     files=[];total=0
-                    for path in sorted(self.git(work,'ls-files').splitlines()):
-                        p=work/path
-                        if not safe_path(path,protected) or p.is_symlink() or not re.search(r'\.(py|rs|ts|tsx|js|go|c|cpp|java)$',path):continue
+                    modes=tree_modes(self.git(work,'ls-tree','-r','-z','HEAD'))
+                    for path in sorted(modes):
+                        if modes[path]!='100644' or not safe_path(path,protected):continue
+                        try:p=contained(work,path)
+                        except ValueError:continue
+                        if p.is_symlink() or not re.search(r'\.(py|rs|ts|tsx|js|go|c|cpp|java)$',path):continue
                         if p.stat().st_size>18000:continue
                         try:text=p.read_text()
                         except (UnicodeError,OSError):continue

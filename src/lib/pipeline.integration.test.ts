@@ -23,3 +23,19 @@ it("atomically advances immutable heads and separates duplicate receipts across 
     atomicHeadAndIdempotentGeneration: true,
   });
 });
+it("enrolls runners only through unused, unexpired, owner-bound challenges with globally unique keys", async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc("test_runner_enrollment" as never);
+  expect(error).toBeNull();
+  expect(data).toEqual({
+    enrolled: true,
+    reusedRejected: true,
+    expiredRejected: true,
+    wrongOwnerRejected: true,
+    keyMismatchRejected: true,
+    duplicateKeyRejected: true,
+    unprovenReplaced: true,
+    authorKeyReplayRejected: true,
+    fixturesPersisted: false,
+  });
+});

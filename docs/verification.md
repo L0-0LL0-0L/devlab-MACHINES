@@ -40,3 +40,23 @@
 
 ## Changed files
 src/lib/machine-core.ts/.test.ts, runner.server.ts, runner-signing.ts/.test.ts, machines.functions.ts, github.server.ts, funding-core.ts/.test.ts, funding.functions.ts, pipeline.integration.test.ts; src/routes/api/public/runner.{propose,heartbeat,judge}.ts; src/components/machine-detail.tsx, machine-funding.tsx; src/routes/docs.tsx; runner/worker.py, test_worker.py, devlab-runner.service, README.md; additive migrations 0008–0013; AGENTS.md; roadmap.md.
+
+## Runner key proof, package and guard fixes (2026-10-13)
+Completed code
+- Enrollment: strict canonical Base64 → exactly 32-byte Ed25519 key, normalized hex globally unique (DB index); 5-minute single-use challenge bound to owner, label, role, key, nonce and optional replaced runner; Ed25519 proof of possession verified before an atomic consume+register function returns the one-time credential.
+- Runners without proof cannot authenticate to signed endpoints (403) or lease jobs. Owners see "key NOT proven" and a "Re-enroll with proof" path that deactivates the old row once the new key is proven.
+- Key separation enforced at lease (SQL), callback (server + database trigger on replay insert) and judge: replay key must differ from the proven author key and every key already used on the candidate, on top of owner/runner exclusions. Wording in UI/docs: key proof plus account separation is not Sybil resistance or proof of separate physical hosts.
+- Removed the always-failing "Propose patch with Claude" control; Candidates now shows calibration and latest author-session status and explains where candidates appear. Docs show recipe v2 with labelled, placeholder-only illustrative calibration/output.
+- Patch guards (JS and Python) reject `index … 120000/160000/100755`, copies/renames; worker checks Git tree modes, resolves every path under the checkout root and rejects symlinked ancestors for patches, source selection, harness reads and chain reconstruction.
+- Downloadable `public/downloads/devlab-runner-v2.1.0.zip` (+ .sha256), built reproducibly by `scripts/build-runner-zip.py` from an allowlist: worker.py, devlab_enroll.py, requirements.txt, Dockerfile, systemd service, README, blank runner.env.example. Docs list copy/paste enrollment steps.
+
+Actually exercised
+- `bunx vitest run`: 7 files, 68 tests passed (new: key parsing/canonical/length, stolen key, modified challenge, reused/expired/wrong-owner challenge, key separation, index-mode guards, archive contents/reproducibility, DB enrollment fixture covering reuse/expiry/wrong owner/key mismatch/duplicate key/unproven replacement/author-key replay rejection, all rolled back).
+- Python: 7 unittest tests passed (mode guards, symlink/escape containment, tree modes, CLI keygen 0600/no overwrite/sign/refuse foreign key).
+- Typecheck clean; latest build OK.
+- Browser (signed-in test wallet, private machine): malformed key rejected; forged signature rejected; CLI-signed challenge enrolled; proven credential leased (200, no job); same key rejected on second enrollment; ZIP download byte-identical to the built file; Docs mobile no overflow; no page errors. The test runner was then deactivated; no machine made public, no transactions signed.
+- Concurrent duplicate-key enrollment is covered by the unique index + row-locked challenge (sequential DB fixture), not a parallel load test.
+
+External dependencies only
+- Dedicated Docker hosts with genuinely calibrated, dependency-ready pinned images; one author plus two verifier operators on separate accounts. No real independent replay has run.
+- Hosted billing / fee-to-compute; funded-wallet chain tests; optional GitHub token for rate limits.

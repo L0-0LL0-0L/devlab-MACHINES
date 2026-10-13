@@ -581,35 +581,89 @@ export type Database = {
           },
         ]
       }
+      machine_runner_challenges: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          label: string
+          message: string
+          nonce: string
+          owner_id: string
+          public_key: string
+          replace_runner: string | null
+          role: string
+          signing_key_norm: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          label: string
+          message: string
+          nonce: string
+          owner_id: string
+          public_key: string
+          replace_runner?: string | null
+          role: string
+          signing_key_norm: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          label?: string
+          message?: string
+          nonce?: string
+          owner_id?: string
+          public_key?: string
+          replace_runner?: string | null
+          role?: string
+          signing_key_norm?: string
+        }
+        Relationships: []
+      }
       machine_runners: {
         Row: {
           active: boolean
           created_at: string
           id: string
+          key_verified_at: string | null
           label: string
           owner_id: string
           public_key: string
+          replaced_by: string | null
           role: string
+          signing_key_norm: string | null
           token_hash: string
         }
         Insert: {
           active?: boolean
           created_at?: string
           id?: string
+          key_verified_at?: string | null
           label: string
           owner_id: string
           public_key: string
+          replaced_by?: string | null
           role: string
+          signing_key_norm?: string | null
           token_hash: string
         }
         Update: {
           active?: boolean
           created_at?: string
           id?: string
+          key_verified_at?: string | null
           label?: string
           owner_id?: string
           public_key?: string
+          replaced_by?: string | null
           role?: string
+          signing_key_norm?: string | null
           token_hash?: string
         }
         Relationships: []
@@ -1137,6 +1191,15 @@ export type Database = {
         }
         Returns: Json
       }
+      enroll_machine_runner: {
+        Args: {
+          p_challenge: string
+          p_key_norm: string
+          p_owner: string
+          p_token_hash: string
+        }
+        Returns: Json
+      }
       finish_machine_job: {
         Args: {
           p_job: string
@@ -1230,6 +1293,7 @@ export type Database = {
       }
       test_machine_head_and_receipts: { Args: never; Returns: Json }
       test_machine_pipeline_atomicity: { Args: never; Returns: Json }
+      test_runner_enrollment: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { recipeSchema, canonical, digest, guardPatch, calibrationReady } from "./machine-core";
+import { recipeSchema, canonical, digest, calibrationReady } from "./machine-core";
 const idSchema = z.object({ id: z.string().uuid() });
 export const validateRepository = createServerFn({ method: "POST" })
   .inputValidator((v: unknown) => z.object({ url: z.string().max(300) }).parse(v))
@@ -174,48 +174,108 @@ export const providerHealth = createServerFn({ method: "POST" })
       ),
     };
   });
-export const proposePatch = createServerFn({ method: "POST" })
+const enrollInput = z
+  .object({
+    label: z.string().trim().min(2).max(80),
+    publicKey: z.string().max(64),
+    role: z.enum(["author", "verifier"]),
+    replaceRunnerId: z.string().uuid().nullable().optional(),
+  })
+  .strict();
+/** Step 1: short-lived single-use challenge bound to owner, label, role, key and nonce. */
+export const createRunnerChallenge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((v: unknown) =>
-    z.object({ id: z.string().uuid(), paths: z.array(z.string()).max(6) }).parse(v),
-  )
+  .inputValidator((v: unknown) => enrollInput.parse(v))
   .handler(async ({ data, context }) => {
-    const { data: m } = await context.supabase
-      .from("machines")
-      .select("id")
-      .eq("id", data.id)
-      .eq("owner_id", context.userId)
-      .single();
-    if (!m) throw new Error("Not your machine");
-    throw new Error(
-      "Start a calibrated author session using Run. Patch generation requires an active signed runner lease and a bounded attempt.",
+    const { parseSigningKey, enrollmentMessage, CHALLENGE_TTL_MS } = await import(
+      "./runner-enrollment"
     );
+    const key = parseSigningKey(data.publicKey);
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { count } = await db
+      .from("machine_runner_challenges")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", context.userId)
+      .gte("created_at", new Date(Date.now() - 3600_000).toISOString());
+    if ((count ?? 0) >= 20) throw new Error("Too many enrollment challenges; try again later");
+    const id = crypto.randomUUID();
+    const nonce = Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) =>
+      b.toString(16).padStart(2, "0"),
+    ).join("");
+    const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS).toISOString();
+    const message = enrollmentMessage({
+      challengeId: id,
+      ownerId: context.userId,
+      role: data.role,
+      label: data.label,
+      publicKey: key.base64,
+      nonce,
+      expiresAt,
+      replaceRunnerId: data.replaceRunnerId ?? null,
+    });
+    const { error } = await db.from("machine_runner_challenges").insert({
+      id,
+      owner_id: context.userId,
+      label: data.label,
+      role: data.role,
+      public_key: key.base64,
+      signing_key_norm: key.normalized,
+      nonce,
+      message,
+      replace_runner: data.replaceRunnerId ?? null,
+      expires_at: expiresAt,
+    });
+    if (error) throw new Error("Could not create challenge");
+    return { challengeId: id, message, expiresAt };
   });
-export const registerRunner = createServerFn({ method: "POST" })
+/** Step 2: verify Ed25519 proof of possession, then consume challenge + register atomically. */
+export const completeRunnerEnrollment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((v: unknown) =>
     z
-      .object({
-        label: z.string().min(2).max(80),
-        publicKey: z.string().min(32).max(500),
-        role: z.enum(["author", "verifier"]),
-      })
+      .object({ challengeId: z.string().uuid(), signature: z.string().max(100) })
+      .strict()
       .parse(v),
   )
   .handler(async ({ data, context }) => {
+    const { verifyEnrollment, challengeUsable } = await import("./runner-enrollment");
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { data: c } = await db
+      .from("machine_runner_challenges")
+      .select("*")
+      .eq("id", data.challengeId)
+      .maybeSingle();
+    if (!c) throw new Error("Unknown challenge");
+    const problem = challengeUsable(c, context.userId);
+    if (problem) throw new Error(problem);
+    const key = verifyEnrollment(c.message, data.signature, c.public_key);
     const token = crypto.randomUUID() + crypto.randomUUID();
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: r, error } = await supabaseAdmin
+    const { data: r, error } = await db.rpc("enroll_machine_runner", {
+      p_challenge: c.id,
+      p_owner: context.userId,
+      p_key_norm: key.normalized,
+      p_token_hash: await digest(token),
+    });
+    if (error) throw new Error(error.message);
+    return { ...(r as { id: string; label: string; role: string }), token };
+  });
+export const listMyRunners = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await db
       .from("machine_runners")
-      .insert({
-        owner_id: context.userId,
-        label: data.label,
-        public_key: data.publicKey,
-        role: data.role,
-        token_hash: await digest(token),
-      })
-      .select("id,label,role")
-      .single();
-    if (error) throw error;
-    return { ...r, token };
+      .select("id,label,role,active,key_verified_at,signing_key_norm,created_at,replaced_by")
+      .eq("owner_id", context.userId)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error("Could not read runners");
+    return (data ?? []).map((r) => ({
+      id: r.id,
+      label: r.label,
+      role: r.role,
+      active: r.active,
+      proven: !!r.key_verified_at && !!r.signing_key_norm,
+      fingerprint: r.signing_key_norm ? r.signing_key_norm.slice(0, 16) : null,
+      replaced: !!r.replaced_by,
+    }));
   });
