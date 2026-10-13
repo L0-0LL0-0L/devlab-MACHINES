@@ -60,3 +60,12 @@ Actually exercised
 External dependencies only
 - Dedicated Docker hosts with genuinely calibrated, dependency-ready pinned images; one author plus two verifier operators on separate accounts. No real independent replay has run.
 - Hosted billing / fee-to-compute; funded-wallet chain tests; optional GitHub token for rate limits.
+
+## 2026-10-13 edge redirect fix
+- Production error: Cloudflare Workers reject `fetch(..., {redirect:"error"})`. Only occurrence was src/lib/github.server.ts. Now `redirect:"manual"`; any 3xx/opaqueredirect is explicitly refused (fixed api.github.com host, 15 s timeout, 250 KB cap, optional server-only GITHUB_TOKEN, honest 403/404 messages kept).
+- Regression test src/lib/github-redirect.test.ts (manual mode, 301 rejected, 403 rate-limit message). Vitest: 8 files / 71 tests passed. Latest automatic build: OK.
+- Edge-runtime check: same fetch options run inside local workerd (wrangler dev) against api.github.com/repos/units-agents/units-recipes returned 200, default branch `main`. Production lookup still to be repeated by root after republish.
+
+## Root Git fixture check (separate from agent sandbox)
+- Root ran SIX real controlled local Git fixture tests of the v2.1 worker in /workspace/scratch: identical candidate commit on separate checkouts, exact two-generation reconstruction, and rejection of altered digest, parent, candidate identity and symlink patch. Git-only: no Docker, no measurements, no PyNaCl signing.
+- By contrast, the agent sandbox's runner/test_worker.py chain tests use mocked Git/chain inputs; they are not real-checkout evidence.
