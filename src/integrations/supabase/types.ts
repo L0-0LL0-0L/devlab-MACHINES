@@ -1293,6 +1293,7 @@ export type Database = {
       }
       test_machine_head_and_receipts: { Args: never; Returns: Json }
       test_machine_pipeline_atomicity: { Args: never; Returns: Json }
+      test_runner_enrollment: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
