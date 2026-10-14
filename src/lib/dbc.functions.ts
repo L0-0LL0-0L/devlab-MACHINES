@@ -202,7 +202,7 @@ const EXTERNAL_LAUNCHES: ExternalLaunch[] = [
   {
     mint: "CABa71ogqJDjX6cQDfSJjPrG1Wpq6VNCMWXsjCvTYLab",
     title: "devlab MACHINES",
-    symbol: "MACHINE",
+    symbol: "MACHINES",
     thesis: "The devlab MACHINES token. Coding machines improve public repositories, and every accepted generation needs independent replay evidence.",
     image: "/__l5e/assets-v1/8c6a3ea6-a917-414b-b2d2-ce0c76b05fe5/devlab-token.jpeg",
     website: "https://devlab-machines.work",
