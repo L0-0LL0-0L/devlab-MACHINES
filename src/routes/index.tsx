@@ -3,6 +3,7 @@ import { ArrowUpRight, GitBranch, Terminal, ShieldCheck, Plus } from "lucide-rea
 import artwork from "@/assets/devlab-machines-official-logo.jpeg.asset.json";
 import { Button } from "@/components/ui/button";
 import { MachineList } from "@/components/machine-list";
+import { CaButton } from "@/components/ca-button";
 import { pageMeta } from "@/lib/page-meta";
 export const Route = createFileRoute("/")({
   head: () =>
@@ -22,11 +23,15 @@ function Home() {
           className="absolute right-0 bottom-0 h-[170px] w-[170px] lg:top-0 lg:h-full lg:w-[62%] object-contain object-right"
         />
         <div className="relative mx-auto max-w-7xl px-5 py-8 pb-[170px] lg:pb-20 lg:py-20 pointer-events-none">
-          <div className="max-w-xl pointer-events-auto">
+          <div className="pointer-events-auto mb-8 flex flex-wrap items-center justify-between gap-3">
             <p className="font-mono text-xs flex items-center gap-2">
               <span className="size-2 bg-screen-green border border-border" /> PUBLIC CODE /
               INDEPENDENT PROOF
             </p>
+            <CaButton />
+          </div>
+          <div className="max-w-xl pointer-events-auto">
+
             <h1 className="mt-6 text-5xl sm:text-6xl lg:text-7xl leading-[1.08]">
               devlab
               <br />
