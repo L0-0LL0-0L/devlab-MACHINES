@@ -58,7 +58,7 @@ function TokenPage() {
   if (project.isLoading) return <PageHeader eyebrow="launchpad" title="Loading…" />;
   if (!p) return (
     <><PageHeader eyebrow="launchpad" title="Project not found" />
-      <div className="mx-auto max-w-3xl px-5 py-14"><EmptyState title="This project is private or doesn't exist" action={<Link to="/launchpad"><Button variant="outline">Back to launchpad</Button></Link>}>Drafts are only visible to their owner. {!user && "Sign in if this is your draft."}</EmptyState></div></>
+      <div className="mx-auto max-w-3xl px-5 py-14"><EmptyState title="This project is private or doesn't exist" action={<Link to="/launchpad"><Button variant="outline">Back to launch</Button></Link>}>Drafts are only visible to their owner. {!user && "Sign in if this is your draft."}</EmptyState></div></>
   );
   const isOwner = user?.id === p.owner_id;
   const wrongCluster = p.cluster !== cluster;
@@ -377,6 +377,85 @@ function TradePanel({ mint, symbol }: { mint: string; symbol: string }) {
         </Button>
       )}
       <p className="text-xs text-muted-foreground">You sign every transaction. Nothing is sent until you approve it in your wallet.</p>
+    </section>
+  );
+}
+
+type ProjectRow = { title: string; symbol: string; cluster: string; status: string; mint_address: string | null; image_url: string | null; creator_wallet: string | null };
+
+function TokenScreen({ p, wrongCluster, isOwner }: { p: ProjectRow; wrongCluster: boolean; isOwner: boolean }) {
+  const { cluster, wallet } = useCluster();
+  const state = useServerFn(getPoolState);
+  const mint = p.mint_address;
+  const q = useQuery({
+    queryKey: ["pool", "cluster", cluster, mint],
+    queryFn: () => state({ data: { cluster, mint: mint! } }),
+    enabled: !!mint && !wrongCluster,
+    refetchInterval: 15000,
+  });
+  const d = q.data && q.data.ok ? q.data : null;
+  const isCreatorWallet = !!wallet && !!p.creator_wallet && wallet === p.creator_wallet;
+  const phase = p.status === "draft" ? "AWAITING DEPLOY" : p.status === "migrated" ? "MIGRATED · DAMM v2" : d?.curveComplete ? "CURVE COMPLETE" : mint ? "BONDING CURVE LIVE" : p.status.toUpperCase();
+  const pct = d ? Math.min(100, d.progressBps / 100) : 0;
+  return (
+    <section className="border-b-2 border-border grid-bg">
+      <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-10 lg:grid-cols-[1fr_1.15fr] lg:py-14">
+        <div>
+          <p className="font-mono text-xs flex items-center gap-2">
+            <span className={`size-2 border border-border ${mint ? "bg-screen-green" : "bg-screen-orange"}`} />
+            TOKEN TERMINAL / {p.cluster}
+          </p>
+          <h1 className="mt-5 text-5xl sm:text-6xl leading-[1.05] break-words">{p.title}</h1>
+          <p className="mt-3 font-mono text-xl">${p.symbol}</p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {p.status === "draft" && <StatusPill>private draft</StatusPill>}
+            {isOwner && <StatusPill>you own this</StatusPill>}
+            {isCreatorWallet && <StatusPill>creator wallet connected</StatusPill>}
+          </div>
+          <p className="mt-6 max-w-md text-sm leading-relaxed">
+            {p.status === "draft"
+              ? isOwner ? "Deploy on Meteora from the panel below. One wallet signature creates the token and its pool." : "This token hasn't been deployed yet."
+              : isCreatorWallet ? "You launched this token: buy or sell on the curve and claim your creator fees below." : "Trade on the live Meteora bonding curve. You sign every transaction."}
+          </p>
+        </div>
+        <div className="crt aspect-[16/10] p-5 sm:p-7">
+          <div className="scanlines absolute inset-0" />
+          <div className="relative flex h-full flex-col justify-between font-mono">
+            <div className="flex items-start justify-between gap-3 text-[11px]">
+              <span>devlab://token/{p.symbol.toLowerCase()}</span>
+              <span className="text-screen-green">● {phase}</span>
+            </div>
+            <div className="flex items-center gap-5">
+              {p.image_url ? (
+                <img src={p.image_url} alt={`${p.title} token mark`} className="size-16 sm:size-20 border-2 border-screen-cyan object-cover" />
+              ) : (
+                <div className="grid size-16 sm:size-20 place-items-center border-2 border-screen-cyan text-xl text-screen-cyan">{p.symbol.slice(0, 2)}</div>
+              )}
+              <div className="min-w-0">
+                <p className="text-[11px] text-screen-cyan">PRICE · SOL / TOKEN</p>
+                <p className="text-2xl sm:text-4xl truncate">{d ? Number(d.priceSolPerToken).toPrecision(6) : mint ? (wrongCluster ? "switch network" : "reading…") : "— not deployed"}</p>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-screen-magenta">CURVE → GRADUATION</span>
+                <span>{d ? `${d.quoteReserveSol} / ${d.migrationThresholdSol} SOL` : "—"}</span>
+              </div>
+              <div className="mt-2 flex h-3 gap-[2px]" aria-label={`Curve progress ${pct.toFixed(1)}%`}>
+                {Array.from({ length: 30 }).map((_, i) => (
+                  <span key={i} className={`flex-1 ${i < Math.round(pct * 0.3) ? (i < 6 ? "bg-screen-cyan" : i < 12 ? "bg-screen-green" : i < 18 ? "bg-screen-magenta" : i < 24 ? "bg-screen-orange" : "bg-screen-blue") : "bg-primary-foreground/15"}`} />
+                ))}
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] sm:text-[11px]">
+                <span>FEES <b className="text-screen-orange">{d ? (Number(d.creatorFeeSol) + Number(d.partnerFeeSol)).toFixed(4) : "—"}</b></span>
+                <span>PROGRESS <b className="text-screen-green">{d ? `${pct.toFixed(1)}%` : "—"}</b></span>
+                <span className="text-right">{mint ? shortAddr(mint) : "no mint"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="spectrum h-2 border-t-2 border-border" />
     </section>
   );
 }
