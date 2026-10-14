@@ -13,9 +13,9 @@ const curveIn = z.object({
   migrationMarketCapSol: z.number().positive().max(10_000_000),
 });
 
+// Historical biocode mint, kept for reference only — no longer synced or listed publicly.
 const BIOCODE_EXTERNAL_MINT = "9fiMGcvfGYcDEJW7rAacYchYEGr5gitLXmuXvZGjUbio";
 const BIOCODE_EXTERNAL_OWNER = "3b4f26e0-c683-4b35-8aa5-3ba5d5aa5033";
-const BIOCODE_IMAGE_URL = "/__l5e/assets-v1/7c262e4e-ca17-4bd8-b012-a21916eb2d78/biocode-token.jpg";
 
 type Fail = { ok: false; code: string; message: string };
 
@@ -208,15 +208,9 @@ const EXTERNAL_LAUNCHES: ExternalLaunch[] = [
     website: "https://devlab-machines.work",
     x: "https://x.com/devlabMACHINES",
   },
-  {
-    mint: BIOCODE_EXTERNAL_MINT,
-    title: "biocode",
-    symbol: "BIOCODE",
-    thesis: "A decentralized-science platform for AI-assisted research and community-funded scientific work.",
-    image: BIOCODE_IMAGE_URL,
-    website: "https://biocode.cfd/",
-    x: "https://x.com/biocodeDBC",
-  },
+// biocode (9fiMGcvfGYcDEJW7rAacYchYEGr5gitLXmuXvZGjUbio) is intentionally no longer synced
+// or listed: the owner asked to hide it from public Explorer/Markets listings. Its historical
+// project row stays in the database with a non-listed status.
 ];
 
 async function syncOne(t: ExternalLaunch) {
