@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { PageHeader, SignInPrompt } from "@/components/site";
 import { createMachine, validateRepository, generateSoul } from "@/lib/machines.functions";
 import { useAuth } from "@/lib/auth";
+import { useCluster } from "@/lib/cluster";
+import { prepareMachineToken } from "@/lib/token-machine.functions";
 import { recipeSchema, type Recipe } from "@/lib/machine-core";
 import { pageMeta } from "@/lib/page-meta";
 export const Route = createFileRoute("/launch")({
@@ -29,10 +31,12 @@ const initialRecipe: Recipe = {
 };
 function Launch() {
   const { user } = useAuth();
+  const { cluster } = useCluster();
   const navigate = useNavigate();
   const validate = useServerFn(validateRepository),
     soulFn = useServerFn(generateSoul),
-    save = useServerFn(createMachine);
+    save = useServerFn(createMachine),
+    tokenFn = useServerFn(prepareMachineToken);
   const [step, setStep] = useState(0),
     [name, setName] = useState(""),
     [symbol, setSymbol] = useState(""),
@@ -64,11 +68,21 @@ function Launch() {
   async function finish() {
     if (!repo) return;
     setBusy(true);
+    setError("");
     try {
       const m = await save({
         data: { name, symbol, url: repo.url, commit: repo.commit, soul, recipe, runtime, publish },
       });
       toast.success("Machine saved");
+      if (/^[A-Z0-9]{2,10}$/.test(symbol)) {
+        try {
+          const token = await tokenFn({ data: { id: m.id, cluster } });
+          navigate({ to: "/launchpad/$id", params: { id: token.id } });
+          return;
+        } catch (e) {
+          toast.error(`Token page not prepared: ${(e as Error).message}`);
+        }
+      }
       navigate({ to: "/machines/$id", params: { id: m.id } });
     } catch (e) {
       setError((e as Error).message);
