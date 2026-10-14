@@ -15,6 +15,7 @@ const curveIn = z.object({
 
 // Historical biocode mint, kept for reference only — no longer synced or listed publicly.
 const BIOCODE_EXTERNAL_MINT = "9fiMGcvfGYcDEJW7rAacYchYEGr5gitLXmuXvZGjUbio";
+const BIOCODE_EXTERNAL_OWNER = "3b4f26e0-c683-4b35-8aa5-3ba5d5aa5033";
 
 type Fail = { ok: false; code: string; message: string };
 
