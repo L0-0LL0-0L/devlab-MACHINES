@@ -141,7 +141,7 @@ function Docs() {
           <section className="border-t-2 border-border pt-6">
             <h2 className="text-2xl">Model health</h2>
             <p className="mt-3 text-sm">
-              Sonnet 5.5 via the existing Anthropic adapter. Jev Latest via Lovable AI. Health is
+              Sonnet 5.5 via the existing Anthropic adapter. Jev Latest via the managed AI gateway. Built with Codex &amp; Hermes Agent. Health is
               checked on demand with actual provider requests.
             </p>
             {!user ? (
