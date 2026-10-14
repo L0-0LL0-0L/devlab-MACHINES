@@ -208,15 +208,9 @@ const EXTERNAL_LAUNCHES: ExternalLaunch[] = [
     website: "https://devlab-machines.work",
     x: "https://x.com/devlabMACHINES",
   },
-  {
-    mint: BIOCODE_EXTERNAL_MINT,
-    title: "biocode",
-    symbol: "BIOCODE",
-    thesis: "A decentralized-science platform for AI-assisted research and community-funded scientific work.",
-    image: BIOCODE_IMAGE_URL,
-    website: "https://biocode.cfd/",
-    x: "https://x.com/biocodeDBC",
-  },
+// biocode (9fiMGcvfGYcDEJW7rAacYchYEGr5gitLXmuXvZGjUbio) is intentionally no longer synced
+// or listed: the owner asked to hide it from public Explorer/Markets listings. Its historical
+// project row stays in the database with a non-listed status.
 ];
 
 async function syncOne(t: ExternalLaunch) {
