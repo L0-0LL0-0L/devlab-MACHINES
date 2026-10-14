@@ -134,8 +134,8 @@ function Launch() {
                 ),
               )}
               <p className="text-sm text-muted-foreground">
-                Token creation is optional and wallet-signed. Saving this machine does not deploy a
-                token.
+                Token creation is optional and wallet-signed. With a symbol, saving opens your token
+                page, where you deploy it on Meteora and can buy, sell and claim creator fees.
               </p>
             </>
           )}
