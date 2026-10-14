@@ -197,52 +197,77 @@ export const getPoolState = createServerFn({ method: "POST" })
     }
   });
 
-/** Publish the pre-registered biocode mint only after its mainnet DBC pool is independently verified. */
-export const syncExternalBiocodeLaunch = createServerFn({ method: "POST" }).handler(async () => {
+type ExternalLaunch = { mint: string; title: string; symbol: string; thesis: string; image: string; website: string; x: string };
+const EXTERNAL_LAUNCHES: ExternalLaunch[] = [
+  {
+    mint: "CABa71ogqJDjX6cQDfSJjPrG1Wpq6VNCMWXsjCvTYLab",
+    title: "devlab MACHINES",
+    symbol: "MACHINE",
+    thesis: "The devlab MACHINES token. Coding machines improve public repositories, and every accepted generation needs independent replay evidence.",
+    image: "/__l5e/assets-v1/8c6a3ea6-a917-414b-b2d2-ce0c76b05fe5/devlab-token.jpeg",
+    website: "https://devlab-machines.work",
+    x: "https://x.com/devlabMACHINES",
+  },
+  {
+    mint: BIOCODE_EXTERNAL_MINT,
+    title: "biocode",
+    symbol: "BIOCODE",
+    thesis: "A decentralized-science platform for AI-assisted research and community-funded scientific work.",
+    image: BIOCODE_IMAGE_URL,
+    website: "https://biocode.cfd/",
+    x: "https://x.com/biocodeDBC",
+  },
+];
+
+async function syncOne(t: ExternalLaunch) {
   const s = await import("./dbc.server");
   try {
-    const { address, pool, config } = await s.loadPool(s.getClient("mainnet-beta"), BIOCODE_EXTERNAL_MINT);
+    const { address, pool, config } = await s.loadPool(s.getClient("mainnet-beta"), t.mint);
     if (config.quoteMint.toBase58() !== s.WSOL_MINT) throw new s.DbcError("quote_mismatch", "Pool is not quoted in SOL.");
     const wallet = pool.creator.toBase58();
     if (config.feeClaimer.toBase58() !== wallet) throw new s.DbcError("claimer_mismatch", "Pool fee claimer does not match its creator.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const now = new Date().toISOString();
+    const { data: existing } = await supabaseAdmin.from("projects").select("id,launched_at").eq("cluster", "mainnet-beta").eq("mint_address", t.mint).maybeSingle();
     const projectData = {
       owner_id: BIOCODE_EXTERNAL_OWNER,
-      title: "biocode",
-      symbol: "BIOCODE",
-      thesis: "A decentralized-science platform for AI-assisted research and community-funded scientific work.",
+      title: t.title,
+      symbol: t.symbol,
+      thesis: t.thesis,
       category: "other",
-      evidence: [
-        { label: "Website", url: "https://biocode.cfd/" },
-        { label: "X", url: "https://x.com/biocodeDBC" },
-      ],
+      evidence: [{ label: "Website", url: t.website }, { label: "X", url: t.x }],
       cluster: "mainnet-beta",
       status: Number(pool.isMigrated) === 1 ? "migrated" : "live",
-      mint_address: BIOCODE_EXTERNAL_MINT,
+      mint_address: t.mint,
       pool_address: address.toBase58(),
       config_address: pool.config.toBase58(),
       creator_wallet: wallet,
       treasury_address: wallet,
       token_decimals: s.BASE_DECIMALS,
-      image_url: BIOCODE_IMAGE_URL,
-      website_url: "https://biocode.cfd/",
-      x_url: "https://x.com/biocodeDBC",
-      launched_at: now,
+      image_url: t.image,
+      website_url: t.website,
+      x_url: t.x,
+      launched_at: existing?.launched_at ?? now,
       updated_at: now,
     };
-    const { data: existing } = await supabaseAdmin.from("projects").select("id").eq("cluster", "mainnet-beta").eq("mint_address", BIOCODE_EXTERNAL_MINT).maybeSingle();
     const result = existing
       ? await supabaseAdmin.from("projects").update(projectData).eq("id", existing.id).select("id,status").single()
       : await supabaseAdmin.from("projects").insert(projectData).select("id,status").single();
     const { data, error } = result;
     if (error) throw error;
     if (!data) throw new Error("Verified launch could not be saved.");
-    return { ok: true as const, projectId: data.id, status: data.status };
+    return { ok: true as const, mint: t.mint, projectId: data.id, status: data.status };
   } catch (e) {
-    if (e instanceof s.DbcError && e.code === "pool_not_found") return { ok: true as const, pending: true as const };
-    return { ok: false as const, ...s.describe(e) };
+    if (e instanceof s.DbcError && e.code === "pool_not_found") return { ok: true as const, mint: t.mint, pending: true as const };
+    return { ok: false as const, mint: t.mint, ...s.describe(e) };
   }
+}
+
+/** Publish pre-registered external mints only after their mainnet DBC pools are independently verified. */
+export const syncExternalBiocodeLaunch = createServerFn({ method: "POST" }).handler(async () => {
+  const results = await Promise.all(EXTERNAL_LAUNCHES.map(syncOne));
+  const saved = results.find((r) => r.ok && "projectId" in r);
+  return saved ? { ok: true as const, projectId: (saved as { projectId: string }).projectId, results } : { ok: true as const, pending: true as const, results };
 });
 
 const tradeIn = z.object({ cluster, mint: addr, side: z.enum(["buy", "sell"]), amount: z.string().regex(/^\d+(\.\d+)?$/).max(30), slippageBps: z.number().int().min(10).max(2000) });
