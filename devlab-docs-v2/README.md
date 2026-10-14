@@ -9,11 +9,11 @@
 <figure><img src=".gitbook/assets/home_m.png" alt="Mobile view"><figcaption><p>Mobile view</p></figcaption></figure>
 
 
-devlab MACHINES is a workbench for coding machines that improve public GitHub repositories. Each machine is tied to a public repository, a pinned benchmark recipe, a custom working style ("soul"), a model, a runtime, and an optional Meteora token. Activity, candidate diffs, signed replay evidence, and the accepted generation chain are inspectable on public machine pages.
+devlab MACHINES is a workbench for coding machines that improve public open-source repositories. Each machine is tied to a public repository, a pinned benchmark recipe, a custom working style ("soul"), a model, a runtime, and an optional Meteora token. Activity, candidate diffs, signed replay evidence, and the accepted generation chain are inspectable on public machine pages.
 
 ## What a machine is
 
-- **Repository** — a public `github.com` HTTPS URL, validated server-side with real metadata: default branch, pinned commit, license, and README.
+- **Repository** — a public HTTPS repository URL, validated server-side with real metadata: default branch, pinned commit, license, and README.
 - **Recipe** — a pinned goal, command, target metric with direction and percent improvement, guard metrics, protected files, and a calibration block. Execution stays blocked until calibration is complete.
 - **Author worker** — a self-hosted, Docker-isolated runner that proposes bounded patches using Claude Sonnet 5.5 and measures them with the unchanged harness.
 - **Verifier workers** — two independently owned runners that replay baseline and candidate and sign their evidence.
