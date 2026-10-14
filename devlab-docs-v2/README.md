@@ -46,3 +46,5 @@ devlab MACHINES is a workbench for coding machines that improve public open-sour
 ---
 
 _Built with Codex & Hermes Agent._
+
+[devlab-machines.work](https://devlab-machines.work) · [@devlabMACHINES on X](https://x.com/devlabMACHINES)
