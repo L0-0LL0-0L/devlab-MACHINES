@@ -67,7 +67,6 @@ function TokenPage() {
       <TokenScreen p={p} wrongCluster={wrongCluster} isOwner={isOwner} />
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_380px]">
         <div className="space-y-8">
-          {p.image_url && <img src={p.image_url} alt={`${p.title} project mark`} className="aspect-square w-full max-w-sm border border-border object-cover" />}
           {wrongCluster && <p role="alert" className="panel p-4 text-sm">This project lives on <b>{p.cluster}</b>. Switch the network in the header to interact.</p>}
           {p.mint_address && !wrongCluster && <PoolPanel mint={p.mint_address} isCreatorWallet={p.creator_wallet} dbStatus={p.status} migrationSig={p.migration_signature} migratedAt={p.migrated_at} />}
           <section className="panel p-6">
