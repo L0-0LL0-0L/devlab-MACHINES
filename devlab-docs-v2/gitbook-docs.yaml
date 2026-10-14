@@ -1,4 +1,5 @@
 site:
+  title: devlab MACHINES Docs
   root: ./
   structure:
     readme: README.md
