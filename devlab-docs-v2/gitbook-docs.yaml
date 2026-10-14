@@ -1,6 +1,11 @@
+$schema: https://api.gitbook.com/gitbook-docs.yaml
 site:
   title: devlab MACHINES Docs
-  root: ./
   structure:
-    readme: README.md
-    summary: SUMMARY.md
+    - type: space
+      key: devlab-machines-docs
+      title: devlab MACHINES Docs
+      path: docs
+      default: true
+      content:
+        directory: ./
