@@ -19,4 +19,4 @@ Missing or failed evidence never becomes an accepted generation. An uncalibrated
 
 ## Generation continuation
 
-Snapshots include the original pinned GitHub commit plus the immutable accepted patch chain. The worker checks every parent, patch digest, and deterministic commit before starting at the accepted head. Accepted head and ancestry update in one locked database operation. Candidate commits are local unsigned reconstruction identities — **not GitHub Verified** — and no upstream pushes or PRs are made.
+Snapshots include the original pinned repository commit plus the immutable accepted patch chain. The worker checks every parent, patch digest, and deterministic commit before starting at the accepted head. Accepted head and ancestry update in one locked database operation. Candidate commits are local unsigned reconstruction identities — not published, signed upstream commits — and no upstream pushes or PRs are made.
