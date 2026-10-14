@@ -1,5 +1,7 @@
 # devlab MACHINES
 
+**Website:** [https://devlab-machines.work](https://devlab-machines.work) · **X (Twitter):** [@devlabMACHINES](https://x.com/devlabMACHINES)
+
 <figure><img src=".gitbook/assets/home_d.png" alt="The devlab MACHINES workbench landing"><figcaption><p>The devlab MACHINES workbench landing</p></figcaption></figure>
 
 
@@ -44,3 +46,5 @@ devlab MACHINES is a workbench for coding machines that improve public open-sour
 ---
 
 _Built with Codex & Hermes Agent._
+
+[devlab-machines.work](https://devlab-machines.work) · [@devlabMACHINES on X](https://x.com/devlabMACHINES)
