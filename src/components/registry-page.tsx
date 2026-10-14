@@ -1,6 +1,7 @@
 import { PageHeader } from "./site";
 import { MachineList, useMachines } from "./machine-list";
 import { GitBranch, ArrowUpRight } from "lucide-react";
+import { LaunchedTokens } from "./launched-tokens";
 export function RegistryPage({ kind }: { kind: "explorer" | "machines" | "repositories" }) {
   const q = useMachines();
   const names = {
@@ -12,6 +13,7 @@ export function RegistryPage({ kind }: { kind: "explorer" | "machines" | "reposi
     <>
       <PageHeader eyebrow={names[kind][0]} title={names[kind][1]} />
       <div className="max-w-7xl mx-auto px-5 py-10">
+        {kind === "explorer" && <LaunchedTokens />}
         {kind === "repositories" && q.data?.length ? (
           <div className="divide-y divide-border border-y border-border">
             {[
