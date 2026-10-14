@@ -3,6 +3,7 @@ import { ArrowUpRight, GitBranch, Terminal, ShieldCheck, Plus } from "lucide-rea
 import artwork from "@/assets/devlab-machines-official-logo.jpeg.asset.json";
 import { Button } from "@/components/ui/button";
 import { MachineList } from "@/components/machine-list";
+import { CaButton } from "@/components/ca-button";
 import { pageMeta } from "@/lib/page-meta";
 export const Route = createFileRoute("/")({
   head: () =>
