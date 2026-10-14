@@ -1,5 +1,7 @@
 # devlab MACHINES
 
+**Website:** [https://devlab-machines.work](https://devlab-machines.work) · **X (Twitter):** [@devlabMACHINES](https://x.com/devlabMACHINES)
+
 <figure><img src=".gitbook/assets/home_d.png" alt="The devlab MACHINES workbench landing"><figcaption><p>The devlab MACHINES workbench landing</p></figcaption></figure>
 
 
