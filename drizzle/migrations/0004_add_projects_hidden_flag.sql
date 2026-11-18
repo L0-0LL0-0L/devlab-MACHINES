@@ -1,0 +1,1 @@
+ALTER TABLE public.projects ADD COLUMN hidden boolean NOT NULL DEFAULT false;

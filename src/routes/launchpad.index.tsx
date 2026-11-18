@@ -205,7 +205,7 @@ function LiveList({ cluster }: { cluster: string }) {
   const live = useQuery({
     queryKey: ["live-projects", "cluster", cluster],
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("id,title,symbol,status,launched_at").eq("cluster", cluster).in("status", ["live", "migrated"]).order("launched_at", { ascending: false }).limit(50);
+      const { data, error } = await supabase.from("projects").select("id,title,symbol,status,launched_at").eq("cluster", cluster).eq("hidden", false).in("status", ["live", "migrated"]).order("launched_at", { ascending: false }).limit(50);
       if (error) throw error;
       return data;
     },
