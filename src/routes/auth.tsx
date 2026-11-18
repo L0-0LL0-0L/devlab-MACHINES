@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { getProvider } from "@/lib/cluster";
 import { getWalletChallenge, verifyWalletSignature } from "@/lib/wallet-auth.functions";
-import { LogoMark } from "@/components/Logo";
+import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -61,7 +61,7 @@ function AuthPage() {
   return (
     <div className="grid-bg flex min-h-[80vh] items-center justify-center px-5 py-16">
       <div className="panel w-full max-w-sm p-8">
-        <LogoMark size={28} />
+        <Logo />
         <h1 className="mt-6 text-3xl">Sign in</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Connect your Solana wallet and sign a short message. It's free and sends no transaction. New wallets get an account automatically.
