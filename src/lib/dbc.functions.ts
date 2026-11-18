@@ -303,7 +303,7 @@ export const recordChainTransaction = createServerFn({ method: "POST" })
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: project } = await supabaseAdmin.from("projects").select("id,pool_address,status").eq("cluster", data.cluster).eq("mint_address", data.mint).maybeSingle();
-      if (!project?.pool_address) throw new s.DbcError("unknown_project", "Not a biocode launch.");
+      if (!project?.pool_address) throw new s.DbcError("unknown_project", "Not a biocraft launch.");
       const conn = s.getConnection(data.cluster);
       const info = await s.assertConfirmedTx(conn, data.signature, [project.pool_address]);
       await supabaseAdmin.from("chain_transactions").upsert(

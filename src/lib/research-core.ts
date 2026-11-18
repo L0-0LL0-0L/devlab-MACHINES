@@ -101,7 +101,7 @@ export type ExportBundle = {
 
 export function buildMarkdown(b: ExportBundle, roleName: (id: string) => string): string {
   const L: string[] = [];
-  L.push(`# biocode reproducibility pack`, ``, `Run: \`${b.run.id}\``, `Question: ${escapeMd(b.run.question)}`);
+  L.push(`# biocraft reproducibility pack`, ``, `Run: \`${b.run.id}\``, `Question: ${escapeMd(b.run.question)}`);
   L.push(`Depth: ${b.run.depth} · Stance: ${b.run.stance} · Status: ${b.run.status} · Prompt version: ${b.run.prompt_version ?? "n/a"}`, `Created: ${b.run.created_at}`, ``);
   L.push(`> AI-generated analysis. Verify every claim against the cited sources. "verified" means the excerpt text was found verbatim in the stored source text; it does not mean the claim is true.`, ``);
   L.push(`## Sources`, ``);

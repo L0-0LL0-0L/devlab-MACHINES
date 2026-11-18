@@ -12,10 +12,10 @@ import { useCluster, isBase58Address, shortAddr } from "@/lib/cluster";
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
     meta: [
-      { title: "Portfolio — biocode" },
-      { name: "description", content: "Your biocode wallet, watchlist, launch drafts and research activity." },
-      { property: "og:title", content: "Portfolio — biocode" },
-      { property: "og:description", content: "Track your DeSci activity on biocode." },
+      { title: "Portfolio — biocraft" },
+      { name: "description", content: "Your biocraft wallet, watchlist, launch drafts and research activity." },
+      { property: "og:title", content: "Portfolio — biocraft" },
+      { property: "og:description", content: "Track your DeSci activity on biocraft." },
     ],
   }),
   component: Portfolio,

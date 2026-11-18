@@ -1,5 +1,5 @@
 /**
- * Server-only Meteora Dynamic Bonding Curve adapter for biocode.
+ * Server-only Meteora Dynamic Bonding Curve adapter for biocraft.
  * Every value comes from the chain or from validated input; failures are explicit.
  */
 import { Connection, PublicKey, Transaction, type Keypair } from "@solana/web3.js";

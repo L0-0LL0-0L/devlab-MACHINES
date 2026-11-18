@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import heroImg from "@/assets/hero-lattice.jpg";
+import heroAsset from "@/assets/biocraft_logo.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { EmptyState, StatusPill } from "@/components/site";
 import { RESEARCH_ROLES } from "@/lib/research";
@@ -9,9 +9,9 @@ import { RESEARCH_ROLES } from "@/lib/research";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "biocode — research, launch and open results for DeSci" },
+      { title: "biocraft — research, launch and open results for DeSci" },
       { name: "description", content: "A monochrome decentralized-science platform: AI-assisted research, on-chain project launches on Solana, and open results." },
-      { property: "og:title", content: "biocode — decentralized science platform" },
+      { property: "og:title", content: "biocraft — decentralized science platform" },
       { property: "og:description", content: "Research with specialist AI roles, launch science projects on Solana, publish open results." },
     ],
   }),
@@ -59,12 +59,12 @@ function Home() {
       <section
         className="relative overflow-hidden border-b border-border"
         aria-roledescription="carousel"
-        aria-label="biocode highlights"
+        aria-label="biocraft highlights"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        <img src={heroImg} alt="" width={1600} height={912} className="absolute inset-0 h-full w-full object-cover opacity-70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
+        <img src={heroAsset.url} alt="" width={1254} height={1254} className="absolute right-[-10%] top-1/2 hidden h-[140%] w-auto -translate-y-1/2 md:block" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
         <div className="relative mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-center px-5 py-20">
           <p className="eyebrow" aria-live="polite">{String(i + 1).padStart(2, "0")} / {s.tag}</p>
           <h1 key={i} className="mt-4 max-w-3xl animate-in fade-in slide-in-from-bottom-2 text-5xl leading-[1.05] duration-700 md:text-7xl">
@@ -81,7 +81,7 @@ function Home() {
             <div className="ml-2 flex gap-2">
               {SLIDES.map((sl, k) => (
                 <button key={sl.tag} aria-label={`Show ${sl.tag}`} aria-current={k === i} onClick={() => setI(k)}
-                  className={`h-px w-10 transition-colors ${k === i ? "bg-foreground" : "bg-line"}`} />
+                  className={`h-px w-10 transition-colors ${k === i ? "bg-brand" : "bg-line"}`} />
               ))}
             </div>
           </div>
@@ -93,7 +93,7 @@ function Home() {
           {STATS.map((st) => (
             <div key={st.label} className="border-r border-border px-5 py-10 last:border-r-0">
               <dt className="eyebrow">{st.label}</dt>
-              <dd className="mt-3 font-display text-4xl font-extralight">{st.value}</dd>
+              <dd className="mt-3 font-display text-4xl font-extralight text-brand">{st.value}</dd>
             </div>
           ))}
         </dl>

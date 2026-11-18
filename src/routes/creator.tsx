@@ -15,10 +15,10 @@ import {
 export const Route = createFileRoute("/creator")({
   head: () => ({
     meta: [
-      { title: "Creator dashboard — biocode" },
-      { name: "description", content: "Check unclaimed creator trading fees on your launched biocode tokens and claim them to your wallet." },
-      { property: "og:title", content: "Creator dashboard — biocode" },
-      { property: "og:description", content: "On-chain creator fees and claims for biocode research token launches." },
+      { title: "Creator dashboard — biocraft" },
+      { name: "description", content: "Check unclaimed creator trading fees on your launched biocraft tokens and claim them to your wallet." },
+      { property: "og:title", content: "Creator dashboard — biocraft" },
+      { property: "og:description", content: "On-chain creator fees and claims for biocraft research token launches." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

@@ -88,7 +88,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-5">
-        <Link to="/" aria-label="biocode home">
+        <Link to="/" aria-label="biocraft home">
           <Logo />
         </Link>
         <nav aria-label="Main" className="hidden flex-1 items-center gap-1 lg:flex">
@@ -97,7 +97,7 @@ export function SiteHeader() {
               key={n.to}
               to={n.to}
               className="rounded-sm px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              activeProps={{ className: "text-foreground" }}
+              activeProps={{ className: "text-brand" }}
             >
               {n.label}
             </Link>
@@ -166,7 +166,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-border">
         <p className="mx-auto max-w-7xl px-5 py-5 font-mono text-xs text-muted-foreground">
-          © {new Date().getFullYear()} biocode · v0.1 foundation · devnet by default
+          © {new Date().getFullYear()} biocraft · v0.1 foundation · devnet by default
         </p>
       </div>
     </footer>
@@ -210,7 +210,7 @@ export function SignInPrompt({ what }: { what: string }) {
 export function StatusPill({ children }: { children: ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
-      <span className="size-1.5 rounded-full bg-muted-foreground" aria-hidden /> {children}
+      <span className="size-1.5 rounded-full bg-brand" aria-hidden /> {children}
     </span>
   );
 }

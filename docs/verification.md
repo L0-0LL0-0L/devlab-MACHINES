@@ -1,10 +1,10 @@
-# biocode verification log
+# biocraft verification log
 
 ## Stage 2 — research pipeline (2026-10-01)
 
 ### Versions
 - vitest 5.0.3, zod ^3.25.76, TanStack Start v1 (see package.json)
-- Prompt version: `biocode-research-v1`
+- Prompt version: `biocraft-research-v1`
 - Generative model: `claude-sonnet-5-5` via the official Anthropic Messages API (streamed, accumulated server-side)
 - Typed decisions: `typesafe/jev-latest` via Lovable AI Gateway `POST /v1/systemone` (resolved live to `typesafe/jev-1.13-20260917`)
 

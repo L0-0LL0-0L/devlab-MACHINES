@@ -15,9 +15,9 @@ import { advanceRun, aiHealth, cancelRun, createRun, retryRun, searchPapers } fr
 export const Route = createFileRoute("/research")({
   head: () => ({
     meta: [
-      { title: "Research workspace — biocode" },
+      { title: "Research workspace — biocraft" },
       { name: "description", content: "Multi-role AI research over real papers: findings, hypotheses, dissent, verified citations and reproducibility packs." },
-      { property: "og:title", content: "Research workspace — biocode" },
+      { property: "og:title", content: "Research workspace — biocraft" },
       { property: "og:description", content: "Twelve specialist AI roles review real literature with citation checks and exportable traces." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -344,8 +344,8 @@ function RunDetail({ id, onClose }: { id: string; onClose: () => void }) {
         <div className="mt-4 flex flex-wrap gap-2">
           {["queued", "running"].includes(run.status) && <Button variant="outline" size="sm" onClick={() => act(() => cancel({ data: { id } }))}><Square /> Cancel</Button>}
           {run.status === "failed" && <Button variant="outline" size="sm" onClick={() => act(() => retry({ data: { id } }))}><RotateCcw /> Retry failed step</Button>}
-          <Button variant="outline" size="sm" onClick={() => dl(`biocode-${run.id}.md`, buildMarkdown(bundle, roleName), "text/markdown")}><Download /> Markdown pack</Button>
-          <Button variant="outline" size="sm" onClick={() => dl(`biocode-${run.id}.json`, JSON.stringify(bundle, null, 2), "application/json")}><Download /> JSON pack</Button>
+          <Button variant="outline" size="sm" onClick={() => dl(`biocraft-${run.id}.md`, buildMarkdown(bundle, roleName), "text/markdown")}><Download /> Markdown pack</Button>
+          <Button variant="outline" size="sm" onClick={() => dl(`biocraft-${run.id}.json`, JSON.stringify(bundle, null, 2), "application/json")}><Download /> JSON pack</Button>
         </div>
       </div>
 

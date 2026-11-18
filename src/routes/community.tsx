@@ -5,9 +5,9 @@ import { EmptyState, PageHeader } from "@/components/site";
 export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
-      { title: "Community — biocode" },
-      { name: "description", content: "The biocode community of researchers, funders and builders in decentralized science." },
-      { property: "og:title", content: "Community — biocode" },
+      { title: "Community — biocraft" },
+      { name: "description", content: "The biocraft community of researchers, funders and builders in decentralized science." },
+      { property: "og:title", content: "Community — biocraft" },
       { property: "og:description", content: "Join researchers and builders in decentralized science." },
     ],
   }),

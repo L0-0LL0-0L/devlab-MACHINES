@@ -25,7 +25,7 @@ export const getWalletChallenge = createServerFn({ method: "POST" })
     const nonce = crypto.randomUUID();
     const expires = new Date(Date.now() + TTL_MS);
     const message = [
-      `${host} wants you to sign in to biocode with your Solana account:`,
+      `${host} wants you to sign in to biocraft with your Solana account:`,
       data.wallet,
       "",
       "Signing proves you own this wallet. It costs nothing and sends no transaction.",

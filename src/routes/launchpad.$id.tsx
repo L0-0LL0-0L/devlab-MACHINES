@@ -16,10 +16,10 @@ import {
 export const Route = createFileRoute("/launchpad/$id")({
   head: () => ({
     meta: [
-      { title: "Project token — biocode" },
+      { title: "Project token — biocraft" },
       { name: "description", content: "Research project token on a Meteora bonding curve: live price, buy, sell, creator fees and migration." },
-      { property: "og:title", content: "Project token — biocode" },
-      { property: "og:description", content: "Live Meteora bonding-curve market for a biocode research project." },
+      { property: "og:title", content: "Project token — biocraft" },
+      { property: "og:description", content: "Live Meteora bonding-curve market for a biocraft research project." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

@@ -14,9 +14,9 @@ import { CATEGORIES } from "@/lib/research";
 export const Route = createFileRoute("/launchpad/")({
   head: () => ({
     meta: [
-      { title: "Launchpad — biocode" },
+      { title: "Launchpad — biocraft" },
       { name: "description", content: "Prepare a decentralized-science project launch: thesis, evidence, treasury and token settings, with review." },
-      { property: "og:title", content: "Launchpad — biocode" },
+      { property: "og:title", content: "Launchpad — biocraft" },
       { property: "og:description", content: "Draft and review DeSci project launches on Solana." },
     ],
   }),

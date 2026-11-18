@@ -4,10 +4,10 @@ import { PageHeader } from "@/components/site";
 export const Route = createFileRoute("/docs")({
   head: () => ({
     meta: [
-      { title: "Docs — biocode" },
-      { name: "description", content: "What biocode does today, what is coming next, and how accounts, clusters and data work." },
-      { property: "og:title", content: "Docs — biocode" },
-      { property: "og:description", content: "Current state and roadmap of the biocode DeSci platform." },
+      { title: "Docs — biocraft" },
+      { name: "description", content: "What biocraft does today, what is coming next, and how accounts, clusters and data work." },
+      { property: "og:title", content: "Docs — biocraft" },
+      { property: "og:description", content: "Current state and roadmap of the biocraft DeSci platform." },
     ],
   }),
   component: Docs,
@@ -23,7 +23,7 @@ const SECTIONS = [
     "Every saved record is owner-only: access rules on the database ensure only you can read, change or delete your rows.",
   ]},
   { id: "clusters", t: "Clusters", b: [
-    "biocode defaults to Solana mainnet. Switching networks disconnects your wallet and clears all cluster-dependent data in the app, then reloads drafts and watchlist for the new cluster. Use devnet for risk-free testing.",
+    "biocraft defaults to Solana mainnet. Switching networks disconnects your wallet and clears all cluster-dependent data in the app, then reloads drafts and watchlist for the new cluster. Use devnet for risk-free testing.",
   ]},
   { id: "research", t: "Research", b: [
     "A run combines a question, papers found live in Europe PMC, Crossref and arXiv, pasted text or a private PDF, a depth and stance, and up to 12 specialist roles: Literature mapper, Hypothesis builder, Methods critic, Statistics reviewer, Reproducibility reviewer, Data interpreter, Novelty scout, Translational researcher, Ethics reviewer, Funding planner, Peer-review challenger and Synthesis editor.",

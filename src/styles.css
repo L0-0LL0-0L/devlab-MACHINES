@@ -34,6 +34,8 @@
   --color-panel: var(--panel);
   --color-panel-2: var(--panel-2);
   --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
   --color-ring-offset-background: var(--background);
 }
 
@@ -48,20 +50,22 @@
   --panel: oklch(0.155 0 0);
   --panel-2: oklch(0.2 0 0);
   --line: oklch(0.3 0 0);
-  --primary: oklch(0.97 0 0);
+  --primary: oklch(0.7 0.2 45); /* biocraft orange */
   --primary-foreground: oklch(0.11 0 0);
+  --brand: oklch(0.7 0.2 45);
+  --brand-soft: color-mix(in oklab, var(--brand) 14%, transparent);
   --secondary: oklch(0.22 0 0);
   --secondary-foreground: oklch(0.97 0 0);
   --muted: oklch(0.2 0 0);
   --muted-foreground: oklch(0.68 0 0);
-  --accent: oklch(0.24 0 0);
+  --accent: oklch(0.26 0.05 45);
   --accent-foreground: oklch(0.97 0 0);
   --destructive: oklch(0.65 0.18 25);
   --destructive-foreground: oklch(0.97 0 0);
   --border: oklch(0.27 0 0);
   --input: oklch(0.3 0 0);
-  --ring: oklch(0.8 0 0);
-  --grid-line: color-mix(in oklab, var(--foreground) 6%, transparent);
+  --ring: oklch(0.7 0.2 45);
+  --grid-line: color-mix(in oklab, var(--brand) 10%, transparent);
 }
 
 @layer base {
@@ -93,7 +97,7 @@
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: lowercase;
-  color: var(--muted-foreground);
+  color: var(--brand);
 }
 
 @utility grid-bg {
