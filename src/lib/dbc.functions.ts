@@ -13,10 +13,6 @@ const curveIn = z.object({
   migrationMarketCapSol: z.number().positive().max(10_000_000),
 });
 
-// Historical biocode mint, kept for reference only — no longer synced or listed publicly.
-const BIOCODE_EXTERNAL_MINT = "9fiMGcvfGYcDEJW7rAacYchYEGr5gitLXmuXvZGjUbio";
-const BIOCODE_EXTERNAL_OWNER = "3b4f26e0-c683-4b35-8aa5-3ba5d5aa5033";
-
 type Fail = { ok: false; code: string; message: string };
 
 async function ownDraft(context: { supabase: any }, projectId: string, c: string) {
@@ -196,73 +192,6 @@ export const getPoolState = createServerFn({ method: "POST" })
       return { ok: false as const, ...s.describe(e) };
     }
   });
-
-type ExternalLaunch = { mint: string; title: string; symbol: string; thesis: string; image: string; website: string; x: string };
-const EXTERNAL_LAUNCHES: ExternalLaunch[] = [
-  {
-    mint: "CABa71ogqJDjX6cQDfSJjPrG1Wpq6VNCMWXsjCvTYLab",
-    title: "devlab MACHINES",
-    symbol: "MACHINES",
-    thesis: "The devlab MACHINES token. Coding machines improve public repositories, and every accepted generation needs independent replay evidence.",
-    image: "/__l5e/assets-v1/8c6a3ea6-a917-414b-b2d2-ce0c76b05fe5/devlab-token.jpeg",
-    website: "https://devlab-machines.work",
-    x: "https://x.com/devlabMACHINES",
-  },
-// biocode (9fiMGcvfGYcDEJW7rAacYchYEGr5gitLXmuXvZGjUbio) is intentionally no longer synced
-// or listed: the owner asked to hide it from public Explorer/Markets listings. Its historical
-// project row stays in the database with a non-listed status.
-];
-
-async function syncOne(t: ExternalLaunch) {
-  const s = await import("./dbc.server");
-  try {
-    const { address, pool, config } = await s.loadPool(s.getClient("mainnet-beta"), t.mint);
-    if (config.quoteMint.toBase58() !== s.WSOL_MINT) throw new s.DbcError("quote_mismatch", "Pool is not quoted in SOL.");
-    const wallet = pool.creator.toBase58();
-    if (config.feeClaimer.toBase58() !== wallet) throw new s.DbcError("claimer_mismatch", "Pool fee claimer does not match its creator.");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const now = new Date().toISOString();
-    const { data: existing } = await supabaseAdmin.from("projects").select("id,launched_at").eq("cluster", "mainnet-beta").eq("mint_address", t.mint).maybeSingle();
-    const projectData = {
-      owner_id: BIOCODE_EXTERNAL_OWNER,
-      title: t.title,
-      symbol: t.symbol,
-      thesis: t.thesis,
-      category: "other",
-      evidence: [{ label: "Website", url: t.website }, { label: "X", url: t.x }],
-      cluster: "mainnet-beta",
-      status: Number(pool.isMigrated) === 1 ? "migrated" : "live",
-      mint_address: t.mint,
-      pool_address: address.toBase58(),
-      config_address: pool.config.toBase58(),
-      creator_wallet: wallet,
-      treasury_address: wallet,
-      token_decimals: s.BASE_DECIMALS,
-      image_url: t.image,
-      website_url: t.website,
-      x_url: t.x,
-      launched_at: existing?.launched_at ?? now,
-      updated_at: now,
-    };
-    const result = existing
-      ? await supabaseAdmin.from("projects").update(projectData).eq("id", existing.id).select("id,status").single()
-      : await supabaseAdmin.from("projects").insert(projectData).select("id,status").single();
-    const { data, error } = result;
-    if (error) throw error;
-    if (!data) throw new Error("Verified launch could not be saved.");
-    return { ok: true as const, mint: t.mint, projectId: data.id, status: data.status };
-  } catch (e) {
-    if (e instanceof s.DbcError && e.code === "pool_not_found") return { ok: true as const, mint: t.mint, pending: true as const };
-    return { ok: false as const, mint: t.mint, ...s.describe(e) };
-  }
-}
-
-/** Publish pre-registered external mints only after their mainnet DBC pools are independently verified. */
-export const syncExternalBiocodeLaunch = createServerFn({ method: "POST" }).handler(async () => {
-  const results = await Promise.all(EXTERNAL_LAUNCHES.map(syncOne));
-  const saved = results.find((r) => r.ok && "projectId" in r);
-  return saved ? { ok: true as const, projectId: (saved as { projectId: string }).projectId, results } : { ok: true as const, pending: true as const, results };
-});
 
 const tradeIn = z.object({ cluster, mint: addr, side: z.enum(["buy", "sell"]), amount: z.string().regex(/^\d+(\.\d+)?$/).max(30), slippageBps: z.number().int().min(10).max(2000) });
 

@@ -1,71 +1,48 @@
-# devlab MACHINES pipeline verification — 2026-10-13
+# biocode verification log
 
-## Completed source and workflows
-- Brand, official artwork and registry retained. No publishing, on-chain signing/spending, historical data deletion or BIO mint changes.
-- Autonomous worker author loop: bounded safe source selection, real signed lease-bound Sonnet proposal endpoint, hard attempt/input/output/time limits, conservative persisted token reservations, owner concurrency/daily quotas and immutable attempt caching. Optional manual diff mode remains. Candidate measurements must pass calibrated thresholds before submission.
-- Callback transaction: PostgreSQL row-lock RPC commits result receipt, consumed lease, candidate and two replay jobs OR replay evidence, event and machine state together. Same signed bytes return the same receipt; conflicting/cancelled/expired callbacks fail. Replays are judged separately with safely retryable atomic generation publication.
-- Generation progression: snapshots contain original commit and immutable accepted patch ancestry; worker checks parent, patch digest, exact recipe bytes/digest and deterministic reconstructed candidate hashes. Atomic accepted head update. No GitHub Verified label or upstream pushes/PRs.
-- Calibration: immutable image ID, architecture, toolchain, seed, full harness/dependency hash map, test identities, expected equivalence digest, exact required metric set/ranges and bounded agreement tolerance. Missing calibration blocks execution. Negative/impossible/unrecognized/unknown/missing metrics, disagreement and environment mismatches reject acceptance. Harness read-only mounts; protected tests/CI/config/locks/modes/binaries/symlinks.
-- Signatures v2: exact UTF-8 serialized payload bytes signed and stored; parse only after signature verification. Every replay evidence field and candidate/job/lease/snapshot/digest is checked against those same bytes. Old canonical-signing workers must upgrade.
-- Reliability: signed cancellation/heartbeat renewal, hard database deadline (20 min), downward-configurable worker deadline (max 1000 sec), command/checkout/output/disk bounds. Repository commands remain restricted Docker-only. Runnable systemd service and host setup in runner/README.md.
-- Funding: owner configures self-hosted recipient; confirmed machine-specific direct SOL deposits reconcile with exact memo, signing sender/recipient, cluster and safe integer base units. Immutable receipt, atomic network+signature deduplication. No automatic debits, invented prices, hosting collection, pool liquidity conversion or fee-origin attribution without separate proof. Linked Meteora fee/trade pages retained.
+## Stage 2 — research pipeline (2026-10-01)
 
-## Actually exercised in this turn
-### Live app and providers
-- Fresh generated local test wallet authenticated via actual signed challenge; no transaction signature. Desktop 1280×1800 and mobile 390×844 checked; screenshots reviewed, no page/phone overflow errors.
-- Real public GitHub repository validation initially returned main/997d1b0e86293f6897090f20159bc858e8550e3b/Apache-2.0/README. Repeated fresh lookup subsequently hit GitHub unauthenticated rate limit (403), correctly shown as an error. Full repeated fresh launch was therefore blocked; remaining flow used a clearly private verification machine based on the earlier snapshot, not fake GitHub metadata. Optional operator GITHUB_TOKEN lookup support added.
-- Actual signed author proposal returned **claude-sonnet-5-5** and a real valid unified patch (controlled, labeled verification source snippet, not scientific/benchmark evidence). Identical attempt cached, no second provider call; malformed signed request 400.
-- Provider health rechecked: Claude READY, model claude-sonnet-5-5, 21 input/4 output tokens, 1112 ms; Jev typesafe/jev-1.13-20260917, 276 input/20 output, 329 ms. Keys never logged or sent to sandbox.
-- Register runner → queue → lease → heartbeat 200. Invalid signature 403. Concurrent identical signed failure callbacks returned [200,200], conflicting body 409. Cancellation heartbeat/callback both 409. Expired heartbeat/callback rejected through service client.
-- Settings persisted; follows persisted; public test machine readable anonymously then made private and denied anonymous access. Direct client state forgery denied. Token draft preparation/link opens real retained token page, no transaction executed. Desk loads saved machine.
-- Funding configuration saved through authenticated owner function, receipt controls visible desktop/mobile. No real SOL deposit was sent or reconciled: generated test wallet unfunded. Receipt parser and DB network/idempotency exercised with rollback-only fixtures.
-- Main browser smoke ended with zero page errors. All Explorer/Machines/Repositories/Generations/Analytics/Launch/Desk/Docs/Profile routes loaded and legacy redirects worked. Official artwork unchanged.
+### Versions
+- vitest 5.0.3, zod ^3.25.76, TanStack Start v1 (see package.json)
+- Prompt version: `biocode-research-v1`
+- Generative model: `claude-sonnet-5-5` via the official Anthropic Messages API (streamed, accumulated server-side)
+- Typed decisions: `typesafe/jev-latest` via Lovable AI Gateway `POST /v1/systemone` (resolved live to `typesafe/jev-1.13-20260917`)
 
-### Tests and compilation
-- `bunx vitest run src/lib/pipeline.integration.test.ts src/lib/machine-core.test.ts src/lib/runner-signing.test.ts src/lib/funding-core.test.ts src/lib/research-core.test.ts`: **40 passed**, five files.
-- Real database tests: failure injected after candidate/replay-queue writes rolls back candidate, queues, event and receipt and retains leased status; identical replay produces one candidate/two jobs/one event; receipt conflict rejected. All fixtures rolled back, none persist.
-- Real database head/receipt test: atomic head + idempotent generation; ancestry mutation rejected; receipt idempotency, same-signature cross-network separation and conflicting amount rejected. All fixtures rolled back.
-- Python producer → JS consumer and JS producer → Python consumer tests cover tiny exponent/large exponent, negative zero, Unicode and reordered nested objects. Reserialization invalidates signatures, as intended.
-- `python3 -m unittest discover -s runner -p 'test_*.py'`: **3 passed**. Pure protected-source and strict chain/digest/candidate checks. These mock Git application; no claim of physical commit reconstruction verification.
-- Harness automatic build/typecheck latest observed: **build OK** 2026-10-13 20:30:13 UTC. No manual build/typecheck was run (platform runs them automatically).
-- Local real Git fixture commit test could not execute because sandbox disallows stateful Git commands; test rewritten as pure chain checks. Docker binary unavailable, so actual isolated author/verifier execution remains untested here.
+### Live provider checks (actual results)
+| Check | Result |
+|---|---|
+| Gateway `/v1/messages` with `anthropic/claude-sonnet-5-5` | **400 invalid model** — gateway offers only `claude-sonnet-5`, `opus-5`, `opus-5-5`, `fable-5-1`, `haiku-4-5` |
+| Anthropic adapter without key | Fails fast with `missing_config: ANTHROPIC_API_KEY is not configured` (no fallback, no sample output) |
+| Anthropic adapter with key, ping | OK — model `claude-sonnet-5-5`, 20 in / 4 out tokens |
+| Methods-critic role on 3 live Europe PMC abstracts | OK — schema valid, 4 items, 5/5 citations verified verbatim; 1340 in / 1608 out tokens |
+| Jev choice+noul+score request | OK — domain `longevity` p=1.0; biomedical noul 0.98; score 1.94/2 |
+| Jev claim-support noul | OK — 0.90 for a supporting excerpt |
+| Europe PMC search | OK — 3 results with abstracts |
+| arXiv search | OK — 3 results with abstracts |
+| Crossref search | OK — 3 results (often metadata only; labeled as such) |
 
-## Exact remaining setup/external dependencies
-1. Dedicated Docker hosts, pinned dependency-ready images and genuinely calibrated trusted harness for target repositories; author + two distinct verifier operators. Until real independent Docker replays succeed, **not a fully operational standalone verifier network**. Physical candidate measurement and deterministic Git reconstruction need that environment.
-2. Hosted desktop/compute/billing and automatic fee-to-compute program remain unconfigured external integrations. Self-hosted receipt reconciliation works independently; never equated with managed credits/runway.
-3. Real funded-wallet end-to-end token creation, trades, claims, migration and deposit verification not executed. No wallet funds requested/spent.
-4. GitHub anonymous lookup quota may block new validation; retry after reset or configure server-only operator GITHUB_TOKEN. No GitHub write/signing identity configured; optional fork publication deliberately not enabled, local patch-chain continuation requires none.
-5. Runner identity is an operator attestation, not proof against a malicious operator or hardware remote attestation. Calibration must protect all harness imports/dependencies; opaque arbitrary commands are not certified benchmarks. Dedicated host filesystem quotas are required for hard disk isolation.
-6. If a paid provider request finishes but its result cannot be saved after infrastructure failure, the pending reservation stays charged/blocked rather than silently reissuing. Operator reconciliation may be needed. This is conservative at-most-once charging behavior, not guaranteed provider exactly-once delivery.
+### Automated tests (`bunx vitest run`)
+6/6 passed: role output schema validation, fenced-JSON extraction, verbatim citation verification, unknown-source flagging, input limits (unknown role, path-traversal upload path, oversize question), markdown escaping in exports.
 
-## Changed files
-src/lib/machine-core.ts/.test.ts, runner.server.ts, runner-signing.ts/.test.ts, machines.functions.ts, github.server.ts, funding-core.ts/.test.ts, funding.functions.ts, pipeline.integration.test.ts; src/routes/api/public/runner.{propose,heartbeat,judge}.ts; src/components/machine-detail.tsx, machine-funding.tsx; src/routes/docs.tsx; runner/worker.py, test_worker.py, devlab-runner.service, README.md; additive migrations 0008–0013; AGENTS.md; roadmap.md.
+### Typecheck
+`tsgo --noEmit` — clean.
 
-## Runner key proof, package and guard fixes (2026-10-13)
-Completed code
-- Enrollment: strict canonical Base64 → exactly 32-byte Ed25519 key, normalized hex globally unique (DB index); 5-minute single-use challenge bound to owner, label, role, key, nonce and optional replaced runner; Ed25519 proof of possession verified before an atomic consume+register function returns the one-time credential.
-- Runners without proof cannot authenticate to signed endpoints (403) or lease jobs. Owners see "key NOT proven" and a "Re-enroll with proof" path that deactivates the old row once the new key is proven.
-- Key separation enforced at lease (SQL), callback (server + database trigger on replay insert) and judge: replay key must differ from the proven author key and every key already used on the candidate, on top of owner/runner exclusions. Wording in UI/docs: key proof plus account separation is not Sybil resistance or proof of separate physical hosts.
-- Removed the always-failing "Propose patch with Claude" control; Candidates now shows calibration and latest author-session status and explains where candidates appear. Docs show recipe v2 with labelled, placeholder-only illustrative calibration/output.
-- Patch guards (JS and Python) reject `index … 120000/160000/100755`, copies/renames; worker checks Git tree modes, resolves every path under the checkout root and rejects symlinked ancestors for patches, source selection, harness reads and chain reconstruction.
-- Downloadable `public/downloads/devlab-runner-v2.1.0.zip` (+ .sha256), built reproducibly by `scripts/build-runner-zip.py` from an allowlist: worker.py, devlab_enroll.py, requirements.txt, Dockerfile, systemd service, README, blank runner.env.example. Docs list copy/paste enrollment steps.
+### Security / ownership
+- `research_runs`: owner SELECT/INSERT(only as queued, no results)/DELETE; UPDATE revoked from clients — status, results, errors only written server-side after an RLS ownership read.
+- `research_sources`, `research_steps`, `research_findings`: owner SELECT only; writes only by server.
+- PDFs in private `research-uploads` bucket, path must start with the user's id (storage RLS + server check).
+- Paper fetching only from a fixed host allowlist (api.crossref.org, www.ebi.ac.uk, export.arxiv.org) with timeouts and size caps.
+- Limits: 10 runs/24h, 1 active run, 12 papers, 50k chars text, 10 MB PDF, depth-bounded tokens.
 
-Actually exercised
-- `bunx vitest run`: 7 files, 68 tests passed (new: key parsing/canonical/length, stolen key, modified challenge, reused/expired/wrong-owner challenge, key separation, index-mode guards, archive contents/reproducibility, DB enrollment fixture covering reuse/expiry/wrong owner/key mismatch/duplicate key/unproven replacement/author-key replay rejection, all rolled back).
-- Python: 7 unittest tests passed (mode guards, symlink/escape containment, tree modes, CLI keygen 0600/no overwrite/sign/refuse foreign key).
-- Typecheck clean; latest build OK.
-- Browser (signed-in test wallet, private machine): malformed key rejected; forged signature rejected; CLI-signed challenge enrolled; proven credential leased (200, no job); same key rejected on second enrollment; ZIP download byte-identical to the built file; Docs mobile no overflow; no page errors. The test runner was then deactivated; no machine made public, no transactions signed.
-- Concurrent duplicate-key enrollment is covered by the unique index + row-locked challenge (sequential DB fixture), not a parallel load test.
+### Blocked / untested
+- Full signed-in browser run not executed: the project has no test user, and sign-up requires a confirmable email.
+- PDF document input to Claude untested (depends on the key).
 
-External dependencies only
-- Dedicated Docker hosts with genuinely calibrated, dependency-ready pinned images; one author plus two verifier operators on separate accounts. No real independent replay has run.
-- Hosted billing / fee-to-compute; funded-wallet chain tests; optional GitHub token for rate limits.
-
-## 2026-10-13 edge redirect fix
-- Production error: Cloudflare Workers reject `fetch(..., {redirect:"error"})`. Only occurrence was src/lib/github.server.ts. Now `redirect:"manual"`; any 3xx/opaqueredirect is explicitly refused (fixed api.github.com host, 15 s timeout, 250 KB cap, optional server-only GITHUB_TOKEN, honest 403/404 messages kept).
-- Regression test src/lib/github-redirect.test.ts (manual mode, 301 rejected, 403 rate-limit message). Vitest: 8 files / 71 tests passed. Latest automatic build: OK.
-- Edge-runtime check: same fetch options run inside local workerd (wrangler dev) against api.github.com/repos/units-agents/units-recipes returned 200, default branch `main`. Production lookup still to be repeated by root after republish.
-
-## Root Git fixture check (separate from agent sandbox)
-- Root ran SIX real controlled local Git fixture tests of the v2.1 worker in /workspace/scratch: identical candidate commit on separate checkouts, exact two-generation reconstruction, and rejection of altered digest, parent, candidate identity and symlink patch. Git-only: no Docker, no measurements, no PyNaCl signing.
-- By contrast, the agent sandbox's runner/test_worker.py chain tests use mocked Git/chain inputs; they are not real-checkout evidence.
+## Stage 3 — Meteora DBC launch / trade / claim / migrate (2026-10-01)
+- SDK: @meteora-ag/dynamic-bonding-curve-sdk 1.5.13, @solana/web3.js 1.98.x.
+- Live devnet: DBC program dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN confirmed executable.
+- SDK curve (buildCurveWithMarketCap, 30→85 SOL, 1B supply, 6/9 decimals): migration threshold 31.677992705 SOL, flat 100 bps, creator fee share 100, MET_DAMM_V2.
+- createConfigAndPool transaction built (1048 bytes) and simulated; simulation failed with AccountNotFound because the test payer was unfunded — devnet faucet airdrop returned "Internal error".
+- NOT yet tested live: signed launch broadcast, buy/sell, fee claim, DAMM v2 migration. Run `bun scripts/dbc-devnet-e2e.ts` with PAYER=<funded devnet keypair JSON> to execute the full path.
+- RLS: projects public read only for live/migrated; drafts owner-only; chain/status columns server-only (column grants); profiles.wallet_address no longer client-writable.
+- Typecheck and build pass.
