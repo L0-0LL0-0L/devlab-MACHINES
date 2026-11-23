@@ -36,6 +36,13 @@ const SECTIONS = [
     "Four validated steps: basics (title, symbol, category), thesis and evidence links, treasury address and token settings, then review.",
     "Next: launching will create the token and a Meteora pool on the selected cluster.",
   ]},
+  { id: "private", t: "Private balances (Helius)", b: [
+    "biocraft uses Helius Privacy Rings to keep amounts private. You sign one free message with your wallet. That opens a private balance which only your wallet can re-open, and nothing is stored by biocraft.",
+    "Creators can move claimed fees into their private balance, withdraw them later, and turn on private support for a launched token. Supporters can then send SOL to that creator with the amount encrypted on-chain.",
+    "What stays public: claiming creator fees, moving SOL in or out of a private balance, and which addresses take part in a private transfer. What is hidden: the amount and token of private transfers and balances.",
+    "Each token page shows how many private contributions were recorded. Each one is checked to be a real, successful privacy transaction, but because the recipient and amount are encrypted, the count can't prove who received what.",
+    "This uses Helius's early-access (alpha) toolkit. Zero-knowledge proofs are made in Helius's verified secure enclave and Helius never holds funds. A small public fee reserve (0.01 SOL) pays network fees and can be returned to your wallet at any time.",
+  ]},
   { id: "markets", t: "Markets & portfolio", b: [
     "No prices or balances are simulated. Markets and holdings appear only from real on-chain data once the Meteora integration ships.",
   ]},

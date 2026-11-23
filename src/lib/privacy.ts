@@ -110,7 +110,7 @@ export async function readBalances(s: PrivateSession) {
 
 async function signAndSend(s: PrivateSession, tx: Transaction, privacy: boolean): Promise<string> {
   const signer = s.keypair.toSolanaSigner();
-  const [sigs] = await signer.signTransactions([tx]);
+  const [sigs] = await signer.signTransactions([tx as never]);
   const signed = { ...tx, signatures: { ...tx.signatures, ...sigs } } as Transaction;
   const wire = getBase64EncodedWireTransaction(signed as never);
   const signature = await s.client.solanaRpc.sendTransaction(wire, { encoding: "base64", preflightCommitment: "confirmed" }).send();

@@ -20,3 +20,4 @@
 - Sign-in is Solana wallet only: server issues a one-use nonce message, verifies the ed25519 signature, then mints a session via an admin one-time login token — no email provider needed.
 - Meteora DBC logic lives in `src/lib/dbc.server.ts` (server-only) with thin wrappers in `src/lib/dbc.functions.ts`; projects go live only via `recordLaunch` after on-chain verification — the DB never leads the chain.
 - Each launch creates its own DBC config (feeClaimer = creator wallet) via createConfigAndPool; mint/config keypairs are generated and signed in the browser only.
+- Helius Privacy Rings runs browser-side in `src/lib/privacy.ts` (dynamic import only) with a key derived from a wallet signature, held in memory, signing v1 txs locally; all Helius traffic goes via `src/routes/api/public/helius.$.ts` — browser wallets can't sign v1 txs and the API key must stay server-side.

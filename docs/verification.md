@@ -46,3 +46,9 @@
 - NOT yet tested live: signed launch broadcast, buy/sell, fee claim, DAMM v2 migration. Run `bun scripts/dbc-devnet-e2e.ts` with PAYER=<funded devnet keypair JSON> to execute the full path.
 - RLS: projects public read only for live/migrated; drafts owner-only; chain/status columns server-only (column grants); profiles.wallet_address no longer client-writable.
 - Typecheck and build pass.
+
+## Helius Privacy Rings (2026-11-23)
+- SDK @heliuslabs/spr 0.9.0-alpha, @solana/kit 8.6.0. HELIUS_API_KEY configured as a server secret; browser traffic goes through the /api/public/helius relay (path + RPC method allowlist, key never sent to the browser).
+- Verified in Chromium through the relay on devnet and mainnet: wallet-signature-derived private key is deterministic, private wallet sync returns an empty balance, prover TEE attestation succeeds against the SDK-pinned signed policy.
+- Deposit transaction built, signed locally (v1 format) and submitted on devnet; rejected at simulation because the test key held no SOL (devnet faucets closed / returned errors).
+- NOT yet tested live: funded deposit, confidential transfer, withdrawal, fee-reserve return, receipt recording against a real privacy transaction.
