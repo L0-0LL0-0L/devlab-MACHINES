@@ -354,3 +354,24 @@ export const syncMigrationStatus = createServerFn({ method: "POST" })
       return { ok: false as const, ...s.describe(e) };
     }
   });
+
+/** Promote pre-registered external launches to live only once their Meteora pool exists on-chain. */
+export const promoteExternalLaunches = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ cluster }).parse(d))
+  .handler(async ({ data }) => {
+    const s = await import("./dbc.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin.from("projects").select("id,mint_address").eq("cluster", data.cluster).eq("status", "pending_external").not("mint_address", "is", null).limit(5);
+    let promoted = 0;
+    for (const r of rows ?? []) {
+      try {
+        const { address, pool } = await s.loadPool(s.getClient(data.cluster), r.mint_address!);
+        await supabaseAdmin.from("projects").update({
+          status: Number(pool.isMigrated) === 1 ? "migrated" : "live",
+          pool_address: address.toBase58(), config_address: pool.config.toBase58(), launched_at: new Date().toISOString(),
+        }).eq("id", r.id).eq("status", "pending_external");
+        promoted++;
+      } catch { /* not live yet */ }
+    }
+    return { ok: true as const, promoted };
+  });

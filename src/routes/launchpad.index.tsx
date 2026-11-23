@@ -10,6 +10,7 @@ import { EmptyState, PageHeader, SignInPrompt, StatusPill } from "@/components/s
 import { useAuth } from "@/lib/auth";
 import { useCluster, isBase58Address } from "@/lib/cluster";
 import { CATEGORIES } from "@/lib/research";
+import { promoteExternalLaunches } from "@/lib/dbc.functions";
 
 export const Route = createFileRoute("/launchpad/")({
   head: () => ({
@@ -205,6 +206,7 @@ function LiveList({ cluster }: { cluster: string }) {
   const live = useQuery({
     queryKey: ["live-projects", "cluster", cluster],
     queryFn: async () => {
+      await promoteExternalLaunches({ data: { cluster: cluster as "devnet" | "mainnet-beta" } }).catch(() => null);
       const { data, error } = await supabase.from("projects").select("id,title,symbol,status,launched_at").eq("cluster", cluster).eq("hidden", false).in("status", ["live", "migrated"]).order("launched_at", { ascending: false }).limit(50);
       if (error) throw error;
       return data;
