@@ -19,6 +19,7 @@ import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as ResearchRouteImport } from './routes/research'
 import { Route as LaunchpadIndexRouteImport } from './routes/launchpad.index'
 import { Route as LaunchpadIdRouteImport } from './routes/launchpad.$id'
+import { Route as ApiPublicHeliusSplatRouteImport } from './routes/api/public/helius.$'
 import { Route as ApiPublicMetadataIdRouteImport } from './routes/api/public/metadata.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const LaunchpadIdRoute = LaunchpadIdRouteImport.update({
   path: '/launchpad/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHeliusSplatRoute = ApiPublicHeliusSplatRouteImport.update({
+  id: '/api/public/helius/$',
+  path: '/api/public/helius/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMetadataIdRoute = ApiPublicMetadataIdRouteImport.update({
   id: '/api/public/metadata/$id',
   path: '/api/public/metadata/$id',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/research': typeof ResearchRoute
   '/launchpad/$id': typeof LaunchpadIdRoute
   '/launchpad/': typeof LaunchpadIndexRoute
+  '/api/public/helius/$': typeof ApiPublicHeliusSplatRoute
   '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/research': typeof ResearchRoute
   '/launchpad/$id': typeof LaunchpadIdRoute
   '/launchpad': typeof LaunchpadIndexRoute
+  '/api/public/helius/$': typeof ApiPublicHeliusSplatRoute
   '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/research': typeof ResearchRoute
   '/launchpad/$id': typeof LaunchpadIdRoute
   '/launchpad/': typeof LaunchpadIndexRoute
+  '/api/public/helius/$': typeof ApiPublicHeliusSplatRoute
   '/api/public/metadata/$id': typeof ApiPublicMetadataIdRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/research'
     | '/launchpad/$id'
     | '/launchpad/'
+    | '/api/public/helius/$'
     | '/api/public/metadata/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/research'
     | '/launchpad/$id'
     | '/launchpad'
+    | '/api/public/helius/$'
     | '/api/public/metadata/$id'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/research'
     | '/launchpad/$id'
     | '/launchpad/'
+    | '/api/public/helius/$'
     | '/api/public/metadata/$id'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   ResearchRoute: typeof ResearchRoute
   LaunchpadIdRoute: typeof LaunchpadIdRoute
   LaunchpadIndexRoute: typeof LaunchpadIndexRoute
+  ApiPublicHeliusSplatRoute: typeof ApiPublicHeliusSplatRoute
   ApiPublicMetadataIdRoute: typeof ApiPublicMetadataIdRoute
 }
 
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LaunchpadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/helius/$': {
+      id: '/api/public/helius/$'
+      path: '/api/public/helius/$'
+      fullPath: '/api/public/helius/$'
+      preLoaderRoute: typeof ApiPublicHeliusSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/metadata/$id': {
       id: '/api/public/metadata/$id'
       path: '/api/public/metadata/$id'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResearchRoute: ResearchRoute,
   LaunchpadIdRoute: LaunchpadIdRoute,
   LaunchpadIndexRoute: LaunchpadIndexRoute,
+  ApiPublicHeliusSplatRoute: ApiPublicHeliusSplatRoute,
   ApiPublicMetadataIdRoute: ApiPublicMetadataIdRoute,
 }
 export const routeTree = rootRouteImport

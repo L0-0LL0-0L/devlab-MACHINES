@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader, SignInPrompt, StatusPill } from "@/components/site";
 import { useAuth } from "@/lib/auth";
 import { useCluster, shortAddr } from "@/lib/cluster";
+import { SupportPrivatelyPanel } from "@/components/PrivateVault";
 import {
   buildClaimFeesTransaction, buildLaunchTransaction, buildMigrationTransaction, buildSwapTransaction,
   getPoolState, getSwapQuote, previewCurve, recordChainTransaction, recordLaunch, submitSignedTransaction, syncMigrationStatus,
@@ -86,6 +87,7 @@ function TokenPage() {
         <aside className="space-y-6">
           {p.status === "draft" && (isOwner ? (wrongCluster ? null : <DeployPanel project={p} onDone={() => project.refetch()} />) : <SignInPrompt what="deploy this draft" />)}
           {p.mint_address && !wrongCluster && p.status !== "migrated" && <TradePanel mint={p.mint_address} symbol={p.symbol} />}
+          {(p.status === "live" || p.status === "migrated") && !wrongCluster && !isOwner && <SupportPrivatelyPanel projectId={p.id} symbol={p.symbol} />}
           {p.status === "migrated" && <section className="panel p-5 text-sm">Bonding-curve trading closed after migration. <a className="underline" target="_blank" rel="noreferrer" href={`https://www.meteora.ag/pools?search=${p.mint_address}`}>Trade on Meteora</a></section>}
           {p.mint_address && (
             <dl className="panel space-y-2 p-5 text-xs">

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader, SignInPrompt } from "@/components/site";
+import { PrivateBalancePanel, PrivateSupportToggle } from "@/components/PrivateVault";
 import { useAuth } from "@/lib/auth";
 import { useCluster, shortAddr } from "@/lib/cluster";
 import {
@@ -71,6 +72,8 @@ function CreatorDashboard() {
             </div>
             {!wallet && <Button onClick={() => connectWallet()}>Connect wallet</Button>}
           </section>
+
+          <PrivateBalancePanel />
 
           {projects.isLoading ? <p className="text-sm text-muted-foreground">Loading your launches…</p>
             : projects.error ? <p role="alert" className="text-sm text-destructive">{(projects.error as Error).message}</p>
@@ -151,7 +154,8 @@ function FeeCard({ id, title, symbol, mint, creatorWallet, onClaimed }: { id: st
               {phase ?? (!wallet ? "Connect wallet" : !isCreator ? "Connect the creator wallet to claim" : unclaimed <= 0 ? "Nothing to claim" : `Claim ${trim(unclaimed.toFixed(9))} SOL`)}
             </Button>
             {wallet && !isCreator && <p className="text-xs text-muted-foreground">Only {shortAddr(creatorWallet ?? d.creator)} can claim these fees.</p>}
-            {done && <p className="text-xs">Claimed. <a className="underline" href={done.url} target="_blank" rel="noreferrer">View transaction</a></p>}
+            {done && <p className="text-xs">Claimed. <a className="underline" href={done.url} target="_blank" rel="noreferrer">View transaction</a> · To keep it private, use "Move in" on your private balance above.</p>}
+            <PrivateSupportToggle projectId={id} />
           </>
         )}
     </section>

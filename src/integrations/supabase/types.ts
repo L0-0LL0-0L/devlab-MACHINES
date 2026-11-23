@@ -733,6 +733,38 @@ export type Database = {
           },
         ]
       }
+      private_support_receipts: {
+        Row: {
+          cluster: string
+          created_at: string
+          id: string
+          project_id: string
+          signature: string
+        }
+        Insert: {
+          cluster: string
+          created_at?: string
+          id?: string
+          project_id: string
+          signature: string
+        }
+        Update: {
+          cluster?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          signature?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_support_receipts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -782,6 +814,7 @@ export type Database = {
           pending_config: string | null
           pending_mint: string | null
           pool_address: string | null
+          private_support_address: string | null
           status: string
           symbol: string
           thesis: string
@@ -814,6 +847,7 @@ export type Database = {
           pending_config?: string | null
           pending_mint?: string | null
           pool_address?: string | null
+          private_support_address?: string | null
           status?: string
           symbol: string
           thesis: string
@@ -846,6 +880,7 @@ export type Database = {
           pending_config?: string | null
           pending_mint?: string | null
           pool_address?: string | null
+          private_support_address?: string | null
           status?: string
           symbol?: string
           thesis?: string
