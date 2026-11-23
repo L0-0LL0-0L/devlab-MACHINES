@@ -10,9 +10,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "biocraft — research, launch and open results for DeSci" },
-      { name: "description", content: "A monochrome decentralized-science platform: AI-assisted research, on-chain project launches on Solana, and open results." },
+      { name: "description", content: "A monochrome decentralized-science platform: AI-assisted research, on-chain project launches on Solana, private funding with Helius Privacy Rings, and open results." },
       { property: "og:title", content: "biocraft — decentralized science platform" },
-      { property: "og:description", content: "Research with specialist AI roles, launch science projects on Solana, publish open results." },
+      { property: "og:description", content: "Research with specialist AI roles, launch science projects on Solana, fund them privately, publish open results." },
     ],
   }),
   component: Home,
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/")({
 const SLIDES = [
   { tag: "research", title: "Interrogate the evidence.", body: "Frame a question, paste sources, search the literature and assign up to 12 specialist research roles." },
   { tag: "launch", title: "Launch science on-chain.", body: "Turn a validated thesis into a project with a treasury and token settings on Solana — devnet first." },
+  { tag: "private funding", title: "Fund science privately.", body: "Support creators or keep claimed fees in a private balance. Helius Privacy Rings encrypt amounts on-chain." },
   { tag: "open results", title: "Publish what you find.", body: "Every run and project keeps its history, so results stay inspectable and reproducible." },
 ];
 
@@ -35,13 +36,14 @@ const STEPS = [
   { n: "01", t: "Ask", d: "Write a research question and attach source text or papers." },
   { n: "02", t: "Analyze", d: "Select specialist roles to review evidence from different angles." },
   { n: "03", t: "Launch", d: "Package thesis, evidence, treasury and token settings for review." },
-  { n: "04", t: "Publish", d: "Share open results and track the project from your portfolio." },
+  { n: "04", t: "Publish", d: "Share open results, accept private support and track the project from your portfolio." },
 ];
 
 const UPDATES = [
   { date: "2026-10-01", t: "v0.1 foundation", d: "Accounts, research workspace, launch drafts, watchlist and cluster switching are live." },
-  { date: "next", t: "Meteora pools", d: "Pool creation and trading through the Meteora SDK." },
-  { date: "next", t: "Claude research runs", d: "Queued runs will be executed by Claude with the selected roles." },
+  { date: "2026-11-23", t: "Private balances", d: "Helius Privacy Rings: move claimed fees into an encrypted balance and accept private support with hidden amounts." },
+  { date: "live", t: "Meteora pools", d: "Wallet-signed token launches, buy/sell, creator fee claims and DAMM v2 migration." },
+  { date: "live", t: "Claude research runs", d: "Specialist roles run with Claude Sonnet 5.5 and Jev, with verified citations." },
 ];
 
 function Home() {
@@ -106,7 +108,7 @@ function Home() {
         </div>
         <div className="space-y-5 text-muted-foreground">
           <p>Research questions are reviewed by a panel of specialist roles — from statistician to ethics reviewer — so weaknesses surface before capital is committed.</p>
-          <p>Funding happens on Solana with transparent treasuries. Results and run history stay attached to each project.</p>
+          <p>Funding happens on Solana with transparent treasuries, and supporters can give privately with encrypted amounts. Results and run history stay attached to each project.</p>
           <StatusPill>AI execution connects in the next release · runs are queued today</StatusPill>
         </div>
       </section>
@@ -169,7 +171,7 @@ function Home() {
       <section className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-10 gap-y-4 px-5 py-10">
           <span className="eyebrow">built with</span>
-          {["Solana", "Meteora", "Claude", "Jev"].map((b) => (
+          {["Solana", "Meteora", "Helius", "Claude", "Jev"].map((b) => (
             <span key={b} className="font-display text-xl font-light text-muted-foreground">{b}</span>
           ))}
         </div>

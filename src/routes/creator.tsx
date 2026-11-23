@@ -17,7 +17,7 @@ export const Route = createFileRoute("/creator")({
   head: () => ({
     meta: [
       { title: "Creator dashboard — biocraft" },
-      { name: "description", content: "Check unclaimed creator trading fees on your launched biocraft tokens and claim them to your wallet." },
+      { name: "description", content: "Check and claim creator trading fees on your biocraft tokens, keep them in a private balance and accept private support." },
       { property: "og:title", content: "Creator dashboard — biocraft" },
       { property: "og:description", content: "On-chain creator fees and claims for biocraft research token launches." },
       { property: "og:type", content: "website" },

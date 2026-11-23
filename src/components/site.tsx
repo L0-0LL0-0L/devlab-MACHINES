@@ -144,7 +144,7 @@ export function SiteFooter() {
         <div className="md:col-span-2">
           <Logo />
           <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-            Open infrastructure for funding, running and publishing decentralized science.
+            Open infrastructure for funding, running and publishing decentralized science — with private funding via Helius Privacy Rings.
           </p>
         </div>
         <div>
