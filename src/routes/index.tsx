@@ -5,6 +5,9 @@ import heroAsset from "@/assets/biocraft_logo.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { EmptyState, StatusPill } from "@/components/site";
 import { RESEARCH_ROLES } from "@/lib/research";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useCluster } from "@/lib/cluster";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,8 +29,6 @@ const SLIDES = [
 ];
 
 const STATS = [
-  { value: "0", label: "projects launched on-chain" },
-  { value: "0", label: "live markets" },
   { value: String(RESEARCH_ROLES.length), label: "specialist research roles" },
   { value: "mainnet", label: "default cluster" },
 ];
@@ -47,6 +48,22 @@ const UPDATES = [
 ];
 
 function Home() {
+  const { cluster } = useCluster();
+  const launched = useQuery({
+    queryKey: ["cluster", cluster, "home-launched"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("projects").select("id,title,symbol,status").eq("cluster", cluster).eq("hidden", false).in("status", ["live", "migrated"]).order("launched_at", { ascending: false }).limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const list = launched.data ?? [];
+  const n = launched.isLoading ? "…" : String(list.length);
+  const stats = [
+    { value: n, label: "projects launched on-chain" },
+    { value: launched.isLoading ? "…" : String(list.filter((p) => p.status === "live").length), label: "live markets" },
+    ...STATS,
+  ];
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   useEffect(() => {
@@ -92,7 +109,7 @@ function Home() {
 
       <section className="border-b border-border">
         <dl className="mx-auto grid max-w-7xl grid-cols-2 md:grid-cols-4">
-          {STATS.map((st) => (
+          {stats.map((st) => (
             <div key={st.label} className="border-r border-border px-5 py-10 last:border-r-0">
               <dt className="eyebrow">{st.label}</dt>
               <dd className="mt-3 font-display text-4xl font-extralight text-brand">{st.value}</dd>
@@ -138,9 +155,22 @@ function Home() {
           <Link to="/markets" className="text-sm text-muted-foreground hover:text-foreground">View markets →</Link>
         </div>
         <div className="mt-10">
+          {list.length > 0 ? (
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {list.slice(0, 6).map((p) => (
+                <li key={p.id}>
+                  <Link to="/launchpad/$id" params={{ id: p.id }} className="panel block p-5 hover:border-primary">
+                    <p className="font-mono text-sm text-primary">${p.symbol} · {p.status}</p>
+                    <p className="mt-2 text-xl">{p.title}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : launched.isLoading ? null : (
           <EmptyState title="No projects have launched yet" action={<Button asChild size="sm" variant="outline"><Link to="/launchpad">Draft the first one</Link></Button>}>
             Projects appear here once they are launched on-chain. Drafts stay private to their owners.
           </EmptyState>
+          )}
         </div>
       </section>
 
