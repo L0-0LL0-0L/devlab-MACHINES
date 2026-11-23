@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader } from "@/components/site";
-import { useCluster } from "@/lib/cluster";
+import { useCluster, clusterLabel } from "@/lib/cluster";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/markets")({
@@ -32,7 +32,7 @@ function Markets() {
   const rows = q.data ?? [];
   return (
     <>
-      <PageHeader eyebrow={`markets · ${cluster}`} title="Markets">
+      <PageHeader eyebrow={`markets · ${clusterLabel(cluster)}`} title="Markets">
         Live Meteora pools for launched projects.
       </PageHeader>
       <div className="mx-auto max-w-7xl px-5 py-14">
@@ -46,7 +46,7 @@ function Markets() {
               {q.isLoading ? (
                 <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">Loading…</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">No markets on {cluster} yet.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">No markets on {clusterLabel(cluster)} yet.</td></tr>
               ) : rows.map((r) => (
                 <tr key={r.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3">{r.title}</td>

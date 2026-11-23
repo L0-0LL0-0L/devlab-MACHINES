@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader, SignInPrompt, StatusPill } from "@/components/site";
 import { useAuth } from "@/lib/auth";
-import { useCluster, shortAddr } from "@/lib/cluster";
+import { useCluster, clusterLabel, shortAddr } from "@/lib/cluster";
 import { SupportPrivatelyPanel } from "@/components/PrivateVault";
 import {
   buildClaimFeesTransaction, buildLaunchTransaction, buildMigrationTransaction, buildSwapTransaction,
@@ -65,12 +65,12 @@ function TokenPage() {
   const wrongCluster = p.cluster !== cluster;
   return (
     <>
-      <PageHeader eyebrow={`$${p.symbol} · ${p.cluster} · ${p.status}`} title={p.title}>
+      <PageHeader eyebrow={`$${p.symbol} · ${clusterLabel(p.cluster)} · ${p.status}`} title={p.title}>
         {p.category} {p.status === "draft" && <StatusPill>private draft</StatusPill>}
       </PageHeader>
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_380px]">
         <div className="space-y-8">
-          {wrongCluster && <p role="alert" className="panel p-4 text-sm">This project lives on <b>{p.cluster}</b>. Switch the network in the header to interact.</p>}
+          {wrongCluster && <p role="alert" className="panel p-4 text-sm">This project lives on <b>{clusterLabel(p.cluster)}</b>. Switch the network in the header to interact.</p>}
           {p.mint_address && !wrongCluster && <PoolPanel mint={p.mint_address} isCreatorWallet={p.creator_wallet} dbStatus={p.status} migrationSig={p.migration_signature} migratedAt={p.migrated_at} />}
           <section className="panel p-6">
             <h2 className="eyebrow">Thesis</h2>
@@ -92,7 +92,7 @@ function TokenPage() {
           {p.mint_address && (
             <dl className="panel space-y-2 p-5 text-xs">
               {([["Mint", p.mint_address], ["Pool", p.pool_address], ["Config", p.config_address], ["Creator", p.creator_wallet]] as const).map(([k, v]) => v && (
-                <div key={k} className="flex justify-between gap-2"><dt className="text-muted-foreground">{k}</dt><dd className="font-mono"><ExplorerLink a={v} cluster={p.cluster} /></dd></div>
+                <div key={k} className="flex justify-between gap-2"><dt className="text-muted-foreground">{k}</dt><dd className="font-mono"><ExplorerLink a={v} cluster={clusterLabel(p.cluster)} /></dd></div>
               ))}
             </dl>
           )}
@@ -128,7 +128,7 @@ function DeployPanel({ project, onDone }: { project: { id: string; token_supply:
   async function deploy() {
     try {
       if (!wallet) { const c = await connectWallet(); if (!c.ok) throw new Error(c.message); }
-      if (cluster === "mainnet-beta" && !confirmMainnet) throw new Error("Confirm you understand this uses real SOL on mainnet.");
+      if (cluster === "mainnet-beta" && !confirmMainnet) throw new Error("Confirm you understand this uses real SOL on minnet.");
       const { Keypair } = await import("@/lib/solana-client");
       const mint = Keypair.generate();
       const config = Keypair.generate();
@@ -154,7 +154,7 @@ function DeployPanel({ project, onDone }: { project: { id: string; token_supply:
       <p className="text-xs text-muted-foreground">Creates a Meteora bonding-curve config and pool in one transaction, signed by your wallet. SOL-quoted, 6-decimal immutable token, flat 1% fee — all fees claimable by you, no app fee. At graduation, 100% of LP is permanently locked to you on DAMM v2.</p>
       <label className="block text-sm">Starting market cap (SOL)<input className="field mt-1" inputMode="decimal" value={initial} onChange={(e) => setInitial(e.target.value)} /></label>
       <label className="block text-sm">Graduation market cap (SOL)<input className="field mt-1" inputMode="decimal" value={grad} onChange={(e) => setGrad(e.target.value)} /></label>
-      <p className="text-xs text-muted-foreground">Supply {supply.toLocaleString()} · network {cluster}</p>
+      <p className="text-xs text-muted-foreground">Supply {supply.toLocaleString()} · network {clusterLabel(cluster)}</p>
       <Button variant="outline" className="w-full" onClick={doPreview}>Preview curve (SDK)</Button>
       {summary && (
         <dl className="space-y-1 text-xs">

@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader, SignInPrompt } from "@/components/site";
 import { useAuth } from "@/lib/auth";
-import { useCluster, isBase58Address, shortAddr } from "@/lib/cluster";
+import { useCluster, clusterLabel, isBase58Address, shortAddr } from "@/lib/cluster";
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
@@ -66,7 +66,7 @@ function Portfolio() {
 
   return (
     <>
-      <PageHeader eyebrow={`portfolio · ${cluster}`} title="Portfolio">Your private workspace. Data shown is scoped to the selected cluster.</PageHeader>
+      <PageHeader eyebrow={`portfolio · ${clusterLabel(cluster)}`} title="Portfolio">Your private workspace. Data shown is scoped to the selected cluster.</PageHeader>
       <div className="mx-auto max-w-7xl space-y-10 px-5 py-14">
         {!user ? <SignInPrompt what="view your portfolio" /> : (
           <>
@@ -87,7 +87,7 @@ function Portfolio() {
                 <Button disabled={add.isPending}>Add</Button>
               </form>
               <ul className="mt-4 divide-y divide-border border-y border-border">
-                {watch.data?.length === 0 && <li className="py-5 text-sm text-muted-foreground">Nothing watched on {cluster}.</li>}
+                {watch.data?.length === 0 && <li className="py-5 text-sm text-muted-foreground">Nothing watched on {clusterLabel(cluster)}.</li>}
                 {watch.data?.map((w) => (
                   <li key={w.id} className="flex items-center justify-between gap-4 py-3">
                     <div className="min-w-0"><p className="text-sm">{w.label}</p><p className="truncate font-mono text-xs text-muted-foreground">{w.address}</p></div>

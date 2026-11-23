@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { useCluster, shortAddr, type Cluster } from "@/lib/cluster";
+import { useCluster, clusterLabel, shortAddr, type Cluster } from "@/lib/cluster";
 
 export const NAV = [
   { to: "/research", label: "Research" },
@@ -26,11 +26,11 @@ function ClusterSelect() {
         value={cluster}
         onChange={(e) => {
           setCluster(e.target.value as Cluster);
-          toast(`Switched to ${e.target.value}. Wallet and cluster data were reset.`);
+          toast(`Switched to ${clusterLabel(e.target.value)}. Wallet and cluster data were reset.`);
         }}
         className="h-8 rounded-sm border border-input bg-background px-2 font-mono text-xs text-foreground"
       >
-        <option value="mainnet-beta">mainnet</option>
+        <option value="mainnet-beta">minnet</option>
         <option value="devnet">devnet</option>
       </select>
     </label>
@@ -166,7 +166,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-border">
         <p className="mx-auto max-w-7xl px-5 py-5 font-mono text-xs text-muted-foreground">
-          © {new Date().getFullYear()} biocraft · v0.1 foundation · devnet by default
+          © {new Date().getFullYear()} biocraft · v0.1 foundation · minnet by default
         </p>
       </div>
     </footer>

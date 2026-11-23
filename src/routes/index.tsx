@@ -30,7 +30,7 @@ const SLIDES = [
 
 const STATS = [
   { value: String(RESEARCH_ROLES.length), label: "specialist research roles" },
-  { value: "mainnet", label: "default cluster" },
+  { value: "minnet", label: "default cluster" },
 ];
 
 const STEPS = [

@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader, SignInPrompt, StatusPill } from "@/components/site";
 import { useAuth } from "@/lib/auth";
-import { useCluster, isBase58Address } from "@/lib/cluster";
+import { useCluster, clusterLabel, isBase58Address } from "@/lib/cluster";
 import { CATEGORIES } from "@/lib/research";
 import { promoteExternalLaunches } from "@/lib/dbc.functions";
 
@@ -103,7 +103,7 @@ function LaunchPage() {
 
   return (
     <>
-      <PageHeader eyebrow={`launchpad · ${cluster}`} title="Prepare a launch">
+      <PageHeader eyebrow={`launchpad · ${clusterLabel(cluster)}`} title="Prepare a launch">
         Build a validated launch package. Drafts are private and scoped to the selected cluster. <StatusPill>save a draft, then open it to deploy on Meteora</StatusPill>
       </PageHeader>
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_340px]">
@@ -159,12 +159,12 @@ function LaunchPage() {
                   <label className="block text-sm">Total supply<input type="number" className="field mt-1" value={f.token_supply} onChange={(e) => set("token_supply", Number(e.target.value))} /></label>
                   <label className="block text-sm">Decimals<input type="number" min={0} max={9} className="field mt-1" value={f.token_decimals} onChange={(e) => set("token_decimals", Number(e.target.value))} /></label>
                 </div>
-                <p className="text-xs text-muted-foreground">Cluster: <span className="font-mono">{cluster}</span></p>
+                <p className="text-xs text-muted-foreground">Cluster: <span className="font-mono">{clusterLabel(cluster)}</span></p>
               </>
             )}
             {step === 3 && (
               <dl className="grid gap-4 text-sm sm:grid-cols-2">
-                {([["Title", f.title], ["Symbol", f.symbol], ["Category", f.category], ["Cluster", cluster], ["Treasury", f.treasury_address], ["Supply", f.token_supply.toLocaleString()], ["Decimals", String(f.token_decimals)], ["Evidence", `${f.evidence.length} link(s)`]] as const).map(([k, v]) => (
+                {([["Title", f.title], ["Symbol", f.symbol], ["Category", f.category], ["Cluster", clusterLabel(cluster)], ["Treasury", f.treasury_address], ["Supply", f.token_supply.toLocaleString()], ["Decimals", String(f.token_decimals)], ["Evidence", `${f.evidence.length} link(s)`]] as const).map(([k, v]) => (
                   <div key={k}><dt className="eyebrow">{k}</dt><dd className="mt-1 break-all">{v}</dd></div>
                 ))}
                 <div className="sm:col-span-2"><dt className="eyebrow">Thesis</dt><dd className="mt-1 whitespace-pre-wrap text-muted-foreground">{f.thesis}</dd></div>
@@ -182,8 +182,8 @@ function LaunchPage() {
         </div>
 
         <aside>
-          <LiveList cluster={cluster} />
-          <h2 className="mt-10 text-2xl">Your projects <span className="font-mono text-sm text-muted-foreground">{cluster}</span></h2>
+          <LiveList cluster={clusterLabel(cluster)} />
+          <h2 className="mt-10 text-2xl">Your projects <span className="font-mono text-sm text-muted-foreground">{clusterLabel(cluster)}</span></h2>
           <div className="mt-4 space-y-3">
             {!user && <p className="text-sm text-muted-foreground">Sign in to see your private drafts.</p>}
             {user && drafts.data?.length === 0 && <EmptyState title="No drafts on this cluster" />}
@@ -214,7 +214,7 @@ function LiveList({ cluster }: { cluster: string }) {
   });
   return (
     <section>
-      <h2 className="text-2xl">Live launches <span className="font-mono text-sm text-muted-foreground">{cluster}</span></h2>
+      <h2 className="text-2xl">Live launches <span className="font-mono text-sm text-muted-foreground">{clusterLabel(cluster)}</span></h2>
       <div className="mt-4 space-y-2">
         {live.data?.length === 0 && <EmptyState title="No verified launches on this network yet" />}
         {live.data?.map((p) => (

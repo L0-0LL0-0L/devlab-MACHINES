@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { useQueryClient } from "@tanstack/react-query";
 
 export type Cluster = "devnet" | "mainnet-beta";
+export const clusterLabel = (cluster: string) => (cluster === "mainnet-beta" ? "minnet" : cluster);
 type SolanaProvider = {
   isPhantom?: boolean;
   connect: () => Promise<{ publicKey: { toString(): string } }>;
