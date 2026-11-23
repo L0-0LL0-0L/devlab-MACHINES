@@ -9,6 +9,7 @@ import { EmptyState, PageHeader, SignInPrompt, StatusPill } from "@/components/s
 import { useAuth } from "@/lib/auth";
 import { useCluster, clusterLabel, shortAddr } from "@/lib/cluster";
 import { SupportPrivatelyPanel } from "@/components/PrivateVault";
+import { BountiesSection } from "@/components/Bounties";
 import {
   buildClaimFeesTransaction, buildLaunchTransaction, buildMigrationTransaction, buildSwapTransaction,
   getPoolState, getSwapQuote, previewCurve, recordChainTransaction, recordLaunch, submitSignedTransaction, syncMigrationStatus,
@@ -83,6 +84,7 @@ function TokenPage() {
             </ul>
             <p className="mt-6 text-xs text-muted-foreground">Curve liquidity is not spendable research budget. Fees claimed by the creator and curve reserves are shown separately.</p>
           </section>
+          {(p.status === "live" || p.status === "migrated") && !wrongCluster && <BountiesSection projectId={p.id} isOwner={isOwner} />}
         </div>
         <aside className="space-y-6">
           {p.status === "draft" && (isOwner ? (wrongCluster ? null : <DeployPanel project={p} onDone={() => project.refetch()} />) : <SignInPrompt what="deploy this draft" />)}

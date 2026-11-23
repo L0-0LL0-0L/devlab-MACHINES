@@ -21,7 +21,7 @@ function setSession(s: PrivateSession | null) {
 }
 const subscribe = (l: () => void) => (listeners.add(l), () => listeners.delete(l));
 
-function usePrivateSession() {
+export function usePrivateSession() {
   const { cluster, wallet } = useCluster();
   const s = useSyncExternalStore(subscribe, () => current, () => null);
   useEffect(() => {
@@ -38,7 +38,7 @@ function usePrivateSession() {
   return { session: valid, unlock, lock: () => setSession(null) };
 }
 
-async function errText(e: unknown) {
+export async function errText(e: unknown) {
   const { signingError } = await import("@/lib/solana-client");
   const m = signingError(e);
   return m.length > 220 ? `${m.slice(0, 220)}…` : m;

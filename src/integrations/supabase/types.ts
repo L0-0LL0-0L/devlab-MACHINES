@@ -14,6 +14,91 @@ export type Database = {
   }
   public: {
     Tables: {
+      bounties: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          kind: string
+          owner_id: string
+          project_id: string
+          reward_sol: number
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          kind: string
+          owner_id: string
+          project_id: string
+          reward_sol: number
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          kind?: string
+          owner_id?: string
+          project_id?: string
+          reward_sol?: number
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounties_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bounty_submissions: {
+        Row: {
+          body: string
+          bounty_id: string
+          created_at: string
+          id: string
+          owner_id: string
+          paid_signature: string | null
+          receive_address: string
+          status: string
+        }
+        Insert: {
+          body: string
+          bounty_id: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          paid_signature?: string | null
+          receive_address: string
+          status?: string
+        }
+        Update: {
+          body?: string
+          bounty_id?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          paid_signature?: string | null
+          receive_address?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_submissions_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "bounties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chain_transactions: {
         Row: {
           cluster: string
