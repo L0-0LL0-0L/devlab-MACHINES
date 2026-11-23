@@ -15,6 +15,7 @@
     "rolldown": "1.2.1"
   },
   "dependencies": {
+    "@heliuslabs/spr": "0.9.0-alpha",
     "@hookform/resolvers": "^5.2.2",
     "@lovable.dev/cloud-auth-js": "^1.1.2",
     "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.11",
@@ -44,6 +45,7 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@solana/kit": "^8.3.0",
     "@solana/spl-token": "0.4.13",
     "@solana/web3.js": "^1.98.4",
     "@supabase/supabase-js": "^2.117.2",
